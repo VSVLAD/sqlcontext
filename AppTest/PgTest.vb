@@ -20,7 +20,7 @@ Module PgTest
             Next
 
             ' Читаем 1 столбец, маппим на простой тип
-            Console.WriteLine("Тест. Выборка 1 столбца с простым типом")
+            Console.WriteLine("Тест. Выборка 1 столбца с простым типом.")
             Console.ReadKey()
 
             For Each row In context.SelectRows(Of ClassTest)("select id, name, ondate from test")
