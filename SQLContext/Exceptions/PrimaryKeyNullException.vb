@@ -2,7 +2,7 @@
 
     ''' <summary>Исключение создаётся, когда свойство для первичного ключа содержит пустое значение</summary>
     Public Class PrimaryKeyNullException
-        Inherits Exception
+        Inherits SQLContextException
     End Class
 
 End Namespace

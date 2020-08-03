@@ -97,7 +97,7 @@
     <Compile Include="Exceptions\PrimaryKeyNotFoundException.vb" />
     <Compile Include="Exceptions\PrimaryKeyTooManyException.vb" />
     <Compile Include="Exceptions\ColumnNotFoundException.vb" />
-    <Compile Include="Exceptions\SelectContextException.vb" />
+    <Compile Include="Exceptions\SQLContextException.vb" />
     <Compile Include="Interfaces\IQueryReader.vb" />
     <Compile Include="Interfaces\IQueryWriter.vb" />
     <Compile Include="Mapper\ColumnInformation.vb" />
@@ -109,6 +109,16 @@
     <Compile Include="Mapper\Mapper.vb" />
     <Compile Include="Mapper\PreparedQuery.vb" />
     <Compile Include="Providers\Sqlite\SQLiteQueryWriter.vb" />
+    <Compile Include="Resources\ExceptionMessages.ru-RU.Designer.vb">
+      <DependentUpon>ExceptionMessages.ru-RU.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Resources\ExceptionMessages.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExceptionMessages.resx</DependentUpon>
+    </Compile>
     <Compile Include="SQLContextOptions.vb" />
     <Compile Include="Mapper\TableInformation.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -142,6 +152,18 @@
     <Folder Include="Providers\Mssql\" />
     <Folder Include="Providers\Mysql\" />
     <Folder Include="Providers\Oracle\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ExceptionMessages.ru-RU.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ExceptionMessages.ru-RU.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>Resources</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\ExceptionMessages.resx">
+      <CustomToolNamespace>Resources</CustomToolNamespace>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ExceptionMessages.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,4 +1,5 @@
 ﻿Imports System.Text
+Imports System.Threading
 Imports VSProject.MicroORM.Exceptions
 Imports VSProject.MicroORM.Extensions
 Imports VSProject.MicroORM.Interfaces
@@ -10,13 +11,12 @@ Public Class SQLContext
     ''' <summary>Соединение для внутреннего использования</summary>
     Private sqlConn As IDbConnection
 
-
     ''' <summary>Конструктор принимает объект соединения</summary>
     Public Sub New(Connection As IDbConnection)
         sqlConn = Connection
 
         If sqlConn Is Nothing Then
-            Throw New ArgumentNullException("Connection", "Объект соединения должен быть создан")
+            Throw New ArgumentNullException(NameOf(Connection), Resources.ExceptionMessages.CONNECTION_MUST_BE_CREATED)
         End If
 
         If sqlConn.State <> ConnectionState.Closed Then
@@ -150,7 +150,7 @@ Public Class SQLContext
                 sbValues.Append(writer.GetTokenNull)
                 sbValues.Append(writer.GetTokenComma)
             Else
-                sbValues.Append(writer.GetColumnValue(xPropertyValue, xCI.ColumnType, xCI.PropertyType))
+                sbValues.Append(writer.GetColumnValue(xPropertyValue, xCI.PropertyType, xCI.ColumnType))
                 sbValues.Append(writer.GetTokenComma)
             End If
 
@@ -215,7 +215,7 @@ Public Class SQLContext
             sbBuilder.Append(writer.GetTokenEqual)
 
             If xPropertyValue IsNot Nothing Then
-                sbBuilder.Append(writer.GetColumnValue(xPropertyValue, xCI.ColumnType, xCI.PropertyType))
+                sbBuilder.Append(writer.GetColumnValue(xPropertyValue, xCI.PropertyType, xCI.ColumnType))
             Else
                 sbBuilder.Append(writer.GetTokenNull)
             End If
@@ -233,7 +233,7 @@ Public Class SQLContext
         sbBuilder.Append(writer.GetTokenWhere)
         sbBuilder.Append(writer.GetColumnName(pkeyCI.ColumnName))
         sbBuilder.Append(writer.GetTokenEqual)
-        sbBuilder.Append(writer.GetColumnValue(pkeyPropertyValue, pkeyCI.ColumnType, pkeyCI.PropertyType))
+        sbBuilder.Append(writer.GetColumnValue(pkeyPropertyValue, pkeyCI.PropertyType, pkeyCI.ColumnType))
 
         Return ExecNonQuery(sbBuilder.ToString)
     End Function
@@ -266,7 +266,7 @@ Public Class SQLContext
         sbBuilder.Append(writer.GetTokenWhere)
         sbBuilder.Append(writer.GetColumnName(pkeyCI.ColumnName))
         sbBuilder.Append(writer.GetTokenEqual)
-        sbBuilder.Append(writer.GetColumnValue(pkeyPropertyValue, pkeyCI.ColumnType, pkeyCI.PropertyType))
+        sbBuilder.Append(writer.GetColumnValue(pkeyPropertyValue, pkeyCI.PropertyType, pkeyCI.ColumnType))
 
         Return ExecNonQuery(sbBuilder.ToString)
     End Function

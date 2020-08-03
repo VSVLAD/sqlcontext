@@ -1,6 +1,7 @@
 ﻿Imports System.Text
 Imports System.Security.Cryptography
 Imports System.Text.RegularExpressions
+Imports VSProject.MicroORM.Exceptions
 
 ''' <summary>Класс для параметризации запросов SQL</summary>
 Public Class PreparedQuery
@@ -101,9 +102,7 @@ Public Class PreparedQuery
                         Case "R"
                             param.DbType = DbType.Double
                         Case Else
-                            Throw New Exception("Для параметризованных запросов необходимо в имени параметра использовать суффикс!" & vbCrLf &
-                                                "Суффиксы: S - строка, R - дробное число, I - целое, D - дата и время. Зная суффикс, класс правильно декларирует тип параметра." & vbCrLf &
-                                                "Примеры: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D")
+                            Throw New SQLContextException(Resources.ExceptionMessages.PARAMETERIZED_QUERY_MUST_USE_SUFFIX)
                     End Select
 
                     cachedPrepared.ItemCommand.Parameters.Add(param)
@@ -113,8 +112,7 @@ Public Class PreparedQuery
                 ' Для быстрого доступа вытаскиваем первые 4 параметра
                 Select Case cachedPrepared.ParameterCount
                     Case 0
-                        Throw New Exception("Переданы значения для параметризованного запроса, но не распознаны названия параметров!" & vbCrLf & vbCrLf &
-                                            "Поддерживаются именованные параметры с префиксами: @param_name_s и :param_name_s")
+                        Throw New SQLContextException(Resources.ExceptionMessages.PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES)
                     Case 1
                         cachedPrepared.ItemParam1 = CType(cachedPrepared.ItemCommand.Parameters.Item(0), IDbDataParameter)
                     Case 2

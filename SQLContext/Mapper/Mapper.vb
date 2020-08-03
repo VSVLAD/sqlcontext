@@ -77,14 +77,14 @@ Friend Class Mapper
 
             'Array.Copy(src, dst, src.Length)
 
-            Throw New NotImplementedException("Пока ещё не реализовано с массивам")
+            Throw New NotImplementedException(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_ARRAY)
 
         ElseIf typeClass.IsPrimitive OrElse typeClass.IsValueType OrElse typeClass Is GetType(String) Then
             If IsNullableType(typeClass) Then
 
                 'Dim result As T
                 'Dim first As row.Values.First
-                Throw New NotImplementedException("Пока ещё не реализовано с Nullable типами")
+                Throw New NotImplementedException(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_NULLABLE)
             Else
                 Return CType(row.Values.First(), T)
             End If
