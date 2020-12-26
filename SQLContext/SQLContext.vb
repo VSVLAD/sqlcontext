@@ -42,11 +42,11 @@ Public Class SQLContext
             Dim tpClass As Type = GetType(T)
 
             For Each row In SelectRows(SqlText, Values)
-                Yield Mapper.FromDictionaryToClass(Of T)(row)
-            Next
+            Yield Mapper.FromDictionaryToClass(Of T)(row)
+        Next
 
-        Catch ex As Exception
-            Throw New SQLContextException(ex.Message)
+    Catch ex As Exception
+        Throw New SQLContextException(ex.Message)
 
         End Try
     End Function

@@ -65,6 +65,15 @@ Namespace Resources
         End Property
         
         '''<summary>
+        '''  Ищет локализованную строку, похожую на Not found rule serialization for value type {0} from {1} to {2}.
+        '''</summary>
+        Friend Shared ReadOnly Property COLUMN_NOT_SERIALIZABLE() As String
+            Get
+                Return ResourceManager.GetString("COLUMN_NOT_SERIALIZABLE", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
         '''  Ищет локализованную строку, похожую на Connection object must be created before using in SQLContext.
         '''</summary>
         Friend Shared ReadOnly Property CONNECTION_MUST_BE_CREATED() As String
