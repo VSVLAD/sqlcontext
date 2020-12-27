@@ -6,9 +6,8 @@ Imports VSProject.MicroORM.Extensions
 Module SQLiteTest
 
     Sub Main()
-        'New SQLiteConnection("Data Source=C:\test.db")
 
-        Using context As New SQLContext(Nothing)
+        Using context = New SQLContext(New SQLiteConnection("Data Source=C:\test.db"))
             context.ExecNonQuery("drop table if exists test")
             context.ExecNonQuery("create table if not exists test(id integer, name text, ondate datetime)")
             context.ExecNonQuery("pragma synchronous = OFF")
@@ -62,10 +61,13 @@ Module SQLiteTest
             Next
 
             Console.WriteLine("Готово")
-        End Using
+            context.Dispose()
 
-        Console.ReadKey()
+            Console.ReadKey()
+        End Using
     End Sub
+
+
 
     <Table("test")>
     Public Class ClassTest

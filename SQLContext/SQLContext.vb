@@ -1,8 +1,8 @@
 ﻿Imports System.Text
-Imports System.Threading
 Imports VSProject.MicroORM.Exceptions
 Imports VSProject.MicroORM.Extensions
 Imports VSProject.MicroORM.Interfaces
+Imports VSProject.MicroORM.Dynamic
 
 ''' <summary>Класс предоставляет методы для CRUD операций с ORM составляющей</summary>
 Public Class SQLContext
@@ -10,6 +10,19 @@ Public Class SQLContext
 
     ''' <summary>Соединение для внутреннего использования</summary>
     Private sqlConn As IDbConnection
+
+    ''' <summary>Событие вызывается перед выполнением метода вставки строки для логирования, анализа и обработки</summary>
+    ''' <param name="Sql">Сгенерированный запрос</param>
+    Public Event BeforeInsertRow(Sql As String)
+
+    ''' <summary>Событие вызывается перед выполнением метода обновления строки для логирования, анализа и обработки</summary>
+    ''' <param name="Sql">Сгенерированный запрос</param>
+    Public Event BeforeUpdateRow(Sql As String)
+
+    ''' <summary>Событие вызывается перед выполнением метода удалния строки для логирования, анализа и обработки</summary>
+    ''' <param name="Sql">Сгенерированный запрос</param>
+    Public Event BeforeDeleteRow(Sql As String)
+
 
     ''' <summary>Конструктор принимает объект соединения</summary>
     Public Sub New(Connection As IDbConnection)
@@ -32,6 +45,35 @@ Public Class SQLContext
         Return sqlConn
     End Function
 
+    Public Class TestClass
+        Public Property T1 As Integer
+        Public Property T2 As String
+        Public Property T3 As Date
+        Public Property T4 As Long?
+        Public Property T5 As Boolean?
+        Public Property T6 As Object
+    End Class
+
+    Public Iterator Function SelectRowsFast(Of T)(SqlText As String, ParamArray Values() As Object) As IEnumerable(Of T)
+
+        ' Создаём команду с запросом
+        Dim sqlCn As IDbConnection = OpenConnection()
+        Dim sqlCmd As IDbCommand = SQLContextOptions.PreparedCommand.Prepare(SqlText, sqlCn, Values)
+
+        Using sqlRead As IDataReader = sqlCmd.ExecuteReader()
+            Dim compiledDynamicType = DynamicType.Compile(GetType(T))
+
+            While sqlRead.Read()
+                Dim resultObject = compiledDynamicType.YieldFromDataReader(sqlRead)
+
+                Yield CType(resultObject, T)
+            End While
+        End Using
+
+        ' Если запрос не из кеша, тогда очищаем команду
+        If Values.Length = 0 Then sqlCmd.Dispose()
+    End Function
+
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
     ''' <typeparam name="T">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
@@ -42,11 +84,11 @@ Public Class SQLContext
             Dim tpClass As Type = GetType(T)
 
             For Each row In SelectRows(SqlText, Values)
-            Yield Mapper.FromDictionaryToClass(Of T)(row)
-        Next
+                Yield Mapper.FromDictionaryToClass(Of T)(row)
+            Next
 
-    Catch ex As Exception
-        Throw New SQLContextException(ex.Message)
+        Catch ex As Exception
+            Throw New SQLContextException(ex.Message)
 
         End Try
     End Function
@@ -75,7 +117,7 @@ Public Class SQLContext
         Dim sqlCn As IDbConnection = OpenConnection()
         Dim sqlCmd As IDbCommand = SQLContextOptions.PreparedCommand.Prepare(SqlText, sqlCn, Values)
 
-        Using sqlRead As IDataReader = sqlCmd.ExecuteReader()
+        Using sqlRead = sqlCmd.ExecuteReader()
 
             ' Массив с названиями столбцов
             Dim fieldNames As String()
@@ -172,7 +214,12 @@ Public Class SQLContext
         sbBuilder.Append(sbValues.ToString)
         sbBuilder.Append(writer.GetTokenBracketClose)
 
-        Return ExecNonQuery(sbBuilder.ToString)
+        Dim query = sbBuilder.ToString
+
+        ' Передаём в событие сгенерированный запрос для кастомной обработки
+        RaiseEvent BeforeInsertRow(query)
+
+        Return ExecNonQuery(query)
     End Function
 
 
@@ -235,7 +282,12 @@ Public Class SQLContext
         sbBuilder.Append(writer.GetTokenEqual)
         sbBuilder.Append(writer.GetColumnValue(pkeyPropertyValue, pkeyCI.PropertyType, pkeyCI.ColumnType))
 
-        Return ExecNonQuery(sbBuilder.ToString)
+        Dim query = sbBuilder.ToString
+
+        ' Передаём в событие сгенерированный запрос для кастомной обработки
+        RaiseEvent BeforeUpdateRow(query)
+
+        Return ExecNonQuery(query)
     End Function
 
 
@@ -268,7 +320,12 @@ Public Class SQLContext
         sbBuilder.Append(writer.GetTokenEqual)
         sbBuilder.Append(writer.GetColumnValue(pkeyPropertyValue, pkeyCI.PropertyType, pkeyCI.ColumnType))
 
-        Return ExecNonQuery(sbBuilder.ToString)
+        Dim query = sbBuilder.ToString
+
+        ' Передаём в событие сгенерированный запрос для кастомной обработки
+        RaiseEvent BeforeDeleteRow(query)
+
+        Return ExecNonQuery(query)
     End Function
 
 
@@ -309,3 +366,4 @@ Public Class SQLContext
 #End Region
 
 End Class
+

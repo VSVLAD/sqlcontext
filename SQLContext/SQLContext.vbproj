@@ -92,6 +92,8 @@
     <Compile Include="Attributes\ProgrammableAttribute.vb" />
     <Compile Include="Attributes\AutoIncrementAttribute.vb" />
     <Compile Include="Attributes\ColumnAttribute.vb" />
+    <Compile Include="Dynamic\DynamicType.vb" />
+    <Compile Include="Dynamic\ScriptCompiler.vb" />
     <Compile Include="Exceptions\ColumnNotSerializableException.vb" />
     <Compile Include="Exceptions\PrimaryKeyNullException.vb" />
     <Compile Include="Exceptions\PrimaryKeyNotFoundException.vb" />
@@ -101,7 +103,7 @@
     <Compile Include="Interfaces\IQueryReader.vb" />
     <Compile Include="Interfaces\IQueryWriter.vb" />
     <Compile Include="Mapper\ColumnInformation.vb" />
-    <Compile Include="Dynamic\DynamicClass.vb" />
+    <Compile Include="Dynamic\DynamicRow.vb" />
     <Compile Include="Providers\Postgresql\PostgresQueryReader.vb" />
     <Compile Include="Providers\Postgresql\PostgresQueryWriter.vb" />
     <Compile Include="Providers\Sqlite\SQLiteQueryReader.vb" />
