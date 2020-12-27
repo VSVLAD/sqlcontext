@@ -19,7 +19,6 @@
 Define your class for table row
 
 <code>
-	
 	<Table("table_test")>
 	Public Class ClassTest
 
@@ -47,9 +46,25 @@ Connect to database and get each row in object class
 	
 	Using context As New SQLContext(New SQLiteConnection("Data Source=C:\test.db"))
 
-	    For Each row In context.SelectRows(Of ClassTest)("select id, name from table_test")
+	    ' You can read row as object class
+	    
+	    For Each row In context.SelectRows(Of ClassTest)("select id, field_name, field_address from table_test")
 		Console.WriteLine($"Your record data is {row.ID}, {row.Name}, {row.Address}")	
 	    Next
+	    
+	    ' Or you can read as Dictionary(Of String, Object)
+	    
+	    For Each row In context.SelectRows("select id, field_name, field_address from table_test")
+		Console.WriteLine($"Your record data is {row("id")}, {row("field_name")}, {row("field_address")}")	
+	    Next
 
+	    ' Or you can read as dynamic object
+	    For Each row In context.SelectRowsDynamic("select id, field_name, field_address from table_test")
+		Console.WriteLine($"Your record data is {row.id}, {row.field_name}, {row.field_address}")	
+	    Next
+	    
+	    ' Or do you have full control?
+	    Dim reader = context.ExecuteReader("select id, field_name, field_address from table_test")
+	    
 	End Using
 </code>
