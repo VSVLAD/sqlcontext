@@ -28,7 +28,7 @@ Namespace Dynamic
         ''' <summary>Метод генерирует и компилирует код на VB.NET для чтения данных из DataReader и маппинга на пользовательский тип</summary>
         ''' <param name="ClassType">Пользовательский тип (класс) в свойства которого будут заданы значения при чтении из DataReader</param>
         ''' <returns>Объект DynamicType готовый для исполнения</returns>
-        Public Shared Function Compile(ByVal ClassType As Type) As DynamicType
+        Public Shared Function Compile(ClassType As Type) As DynamicType
 
             ' Если тип раннее компилировался, возвращаем его
             If types.ContainsKey(ClassType) Then
@@ -39,15 +39,15 @@ Namespace Dynamic
                 Dim dti As New DynamicType
 
                 dti.ClassType = ClassType
-                dti.ClassName = $"row_{ClassType.AssemblyQualifiedName}"
-                dti.MethodName = $"read_{ClassType.AssemblyQualifiedName}"
+                dti.ClassName = $"row_{ClassType.DeclaringType.Name & PreparedQuery.MD5Hash(CStr(ClassType.GetHashCode))}"
+                dti.MethodName = $"read_{ClassType.DeclaringType.Name & PreparedQuery.MD5Hash(CStr(ClassType.GetHashCode))}"
 
                 Dim sbCode As New StringBuilder
                 sbCode.AppendLine("Imports System.Data")
                 sbCode.AppendLine("Imports System.Reflection")
                 sbCode.AppendLine("Imports System")
                 sbCode.AppendLine($"Public Class {dti.ClassName}")
-                sbCode.AppendLine($"Public Function {dti.MethodName}(reader As IDataReader, classType As Type) As Object")
+                sbCode.AppendLine($"Public Function {dti.MethodName}(reader As IDataReader, ClassType As Type) As Object")
                 sbCode.AppendLine("Dim result = Activator.CreateInstance(classType)")
 
                 sbCode.AppendLine(" Логику дорисовать тут ")
@@ -72,6 +72,7 @@ Namespace Dynamic
                 Return dti
             End If
         End Function
+
 
     End Class
 

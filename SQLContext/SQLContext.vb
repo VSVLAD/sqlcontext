@@ -1,8 +1,7 @@
 ﻿Imports System.Text
-Imports VSProject.MicroORM.Exceptions
-Imports VSProject.MicroORM.Extensions
-Imports VSProject.MicroORM.Interfaces
-Imports VSProject.MicroORM.Dynamic
+Imports VSProject.SQLContext.Exceptions
+Imports VSProject.SQLContext.Extensions
+Imports VSProject.SQLContext.Interfaces
 
 ''' <summary>Класс предоставляет методы для CRUD операций с ORM составляющей</summary>
 Public Class SQLContext
@@ -45,34 +44,25 @@ Public Class SQLContext
         Return sqlConn
     End Function
 
-    Public Class TestClass
-        Public Property T1 As Integer
-        Public Property T2 As String
-        Public Property T3 As Date
-        Public Property T4 As Long?
-        Public Property T5 As Boolean?
-        Public Property T6 As Object
-    End Class
+    'Public Iterator Function SelectRowsFast(Of T)(SqlText As String, ParamArray Values() As Object) As IEnumerable(Of T)
 
-    Public Iterator Function SelectRowsFast(Of T)(SqlText As String, ParamArray Values() As Object) As IEnumerable(Of T)
+    '    ' Создаём команду с запросом
+    '    Dim sqlCn As IDbConnection = OpenConnection()
+    '    Dim sqlCmd As IDbCommand = SQLContextOptions.PreparedCommand.Prepare(SqlText, sqlCn, Values)
 
-        ' Создаём команду с запросом
-        Dim sqlCn As IDbConnection = OpenConnection()
-        Dim sqlCmd As IDbCommand = SQLContextOptions.PreparedCommand.Prepare(SqlText, sqlCn, Values)
+    '    Using sqlRead As IDataReader = sqlCmd.ExecuteReader()
+    '        Dim compiledDynamicType = DynamicType.Compile(GetType(T))
 
-        Using sqlRead As IDataReader = sqlCmd.ExecuteReader()
-            Dim compiledDynamicType = DynamicType.Compile(GetType(T))
+    '        While sqlRead.Read()
+    '            Dim resultObject = compiledDynamicType.YieldFromDataReader(sqlRead)
 
-            While sqlRead.Read()
-                Dim resultObject = compiledDynamicType.YieldFromDataReader(sqlRead)
+    '            Yield CType(resultObject, T)
+    '        End While
+    '    End Using
 
-                Yield CType(resultObject, T)
-            End While
-        End Using
-
-        ' Если запрос не из кеша, тогда очищаем команду
-        If Values.Length = 0 Then sqlCmd.Dispose()
-    End Function
+    '    ' Если запрос не из кеша, тогда очищаем команду
+    '    If Values.Length = 0 Then sqlCmd.Dispose()
+    'End Function
 
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
@@ -137,6 +127,7 @@ Public Class SQLContext
                     For I = 0 To fieldBound
                         fieldNames(I) = sqlRead.GetName(I)
                     Next
+
                 End If
 
                 ' Читаем значения в массив

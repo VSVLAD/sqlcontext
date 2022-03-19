@@ -1,6 +1,6 @@
 ﻿Imports System.Globalization
-Imports VSProject.MicroORM.Exceptions
-Imports VSProject.MicroORM.Interfaces
+Imports VSProject.SQLContext.Exceptions
+Imports VSProject.SQLContext.Interfaces
 
 Namespace Providers.SQLite
 
@@ -135,7 +135,7 @@ Namespace Providers.SQLite
 
             Select Case Source
                 Case typeString
-                    Return String.Format("'{0}'", CStr(Value))
+                    Return $"'{CStr(Value)}'"
 
                 Case typeSingle, typeDouble, typeDecimal
                     Return CDec(Value).ToString(CultureInfo.InvariantCulture)
@@ -147,7 +147,7 @@ Namespace Providers.SQLite
                     Return If(CBool(Value), "1", "0")
 
                 Case typeDate ' Если для дат SQLite не указан тип назначения, по-умолчанию используем текстовый формат
-                    Return String.Format("'{0}'", CDate(Value).ToString("yyyy-MM-dd HH:mm:ss"))
+                    Return $"'{CDate(Value).ToString("yyyy-MM-dd HH:mm:ss")}'"
 
                 Case Else
                     Throw New ColumnNotSerializableException(String.Format(Resources.ExceptionMessages.COLUMN_NOT_SERIALIZABLE, Value.GetType().ToString(), Source.ToString(), Destination.ToString()))

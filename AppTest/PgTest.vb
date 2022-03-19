@@ -1,8 +1,8 @@
 ﻿Imports Npgsql
-Imports VSProject.MicroORM
-Imports VSProject.MicroORM.Providers
-Imports VSProject.MicroORM.Attributes
-Imports VSProject.MicroORM.Extensions
+Imports VSProject.SQLContext
+Imports VSProject.SQLContext.Providers
+Imports VSProject.SQLContext.Attributes
+Imports VSProject.SQLContext.Extensions
 
 Module PgTest
 

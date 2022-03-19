@@ -1,4 +1,4 @@
-﻿Imports VSProject.MicroORM.Attributes
+﻿Imports VSProject.SQLContext.Attributes
 
 <Table("address")>
 Public Class AddressInfo

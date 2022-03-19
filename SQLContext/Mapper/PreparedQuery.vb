@@ -1,7 +1,7 @@
 ﻿Imports System.Text
 Imports System.Security.Cryptography
 Imports System.Text.RegularExpressions
-Imports VSProject.MicroORM.Exceptions
+Imports VSProject.SQLContext.Exceptions
 
 ''' <summary>Класс для параметризации запросов SQL</summary>
 Public Class PreparedQuery
@@ -169,7 +169,7 @@ Public Class PreparedQuery
     ''' <summary>Метод вычисляет хеш по алгоритму MD5</summary>
     ''' <param name="Value">Строковые данные для рассчета хеша</param>
     ''' <returns>Строка в кодировке Base64</returns>
-    Private Shared Function MD5Hash(Value As String) As String
+    Friend Shared Function MD5Hash(Value As String) As String
         Using md As MD5 = New MD5CryptoServiceProvider()
             Dim digest() As Byte = md.ComputeHash(Encoding.UTF8.GetBytes(Value))
             Dim sb = New StringBuilder()

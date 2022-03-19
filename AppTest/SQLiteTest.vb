@@ -1,7 +1,7 @@
 ﻿Imports System.Data.SQLite
-Imports VSProject.MicroORM
-Imports VSProject.MicroORM.Attributes
-Imports VSProject.MicroORM.Extensions
+Imports VSProject.SQLContext
+Imports VSProject.SQLContext.Attributes
+Imports VSProject.SQLContext.Extensions
 
 Module SQLiteTest
 
@@ -16,6 +16,7 @@ Module SQLiteTest
             For Each num In Enumerable.Range(1, 10)
                 context.InsertRow(New ClassTest With {.ID = num, .Name = "First " & num})
             Next
+
 
             ' Читаем 1 столбец, маппим на простой тип
             Console.WriteLine("Тест. Выборка 1 столбца с простым типом")
@@ -73,7 +74,7 @@ Module SQLiteTest
     Public Class ClassTest
 
         <PrimaryKey>
-        Public Property ID As Long?
+        Public Property ID As Long
 
         Public Property Name As String
 

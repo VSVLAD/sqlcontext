@@ -1,6 +1,6 @@
 ﻿Imports System.Globalization
-Imports VSProject.MicroORM.Exceptions
-Imports VSProject.MicroORM.Interfaces
+Imports VSProject.SQLContext.Exceptions
+Imports VSProject.SQLContext.Interfaces
 
 Namespace Providers.PostgreSQL
 
@@ -98,10 +98,10 @@ Namespace Providers.PostgreSQL
 
             Select Case Source
                 Case GetType(Date)
-                    Return String.Format("'{0}'", CDate(Value).ToString("yyyy-MM-dd HH:mm:ss"))
+                    Return $"'{CDate(Value).ToString("yyyy-MM-dd HH:mm:ss")}'"
 
                 Case GetType(String)
-                    Return String.Format("'{0}'", CStr(Value))
+                    Return $"'{CStr(Value)}'"
 
                 Case GetType(Single), GetType(Double), GetType(Decimal)
                     Return CDec(Value).ToString(CultureInfo.InvariantCulture)

@@ -1,5 +1,5 @@
-﻿Imports VSProject.MicroORM.Interfaces
-Imports VSProject.MicroORM.Providers
+﻿Imports VSProject.SQLContext.Interfaces
+Imports VSProject.SQLContext.Providers
 
 ''' <summary>Настройки для поведения класса SQLContext</summary>
 Public Class SQLContextOptions

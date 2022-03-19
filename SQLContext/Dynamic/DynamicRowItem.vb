@@ -2,7 +2,7 @@
 
 Namespace Dynamic
 
-    Public Class DynamicRow
+    Public Class DynamicRowItem
         Inherits DynamicObject
 
         Private row As Dictionary(Of String, Object)

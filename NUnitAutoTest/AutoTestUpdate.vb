@@ -1,7 +1,7 @@
-Imports VSProject.MicroORM.Attributes
-Imports VSProject.MicroORM.Exceptions
-Imports VSProject.MicroORM.Extensions
-Imports VSProject.MicroORM
+Imports VSProject.SQLContext.Attributes
+Imports VSProject.SQLContext.Exceptions
+Imports VSProject.SQLContext.Extensions
+Imports VSProject.SQLContext
 Imports NUnit.Framework
 Imports System.Data.SQLite
 

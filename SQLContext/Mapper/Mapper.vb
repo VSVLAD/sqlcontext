@@ -1,6 +1,6 @@
 ﻿Imports System.Reflection
-Imports VSProject.MicroORM.Attributes
-Imports VSProject.MicroORM.Dynamic
+Imports VSProject.SQLContext.Attributes
+Imports VSProject.SQLContext.Dynamic
 
 ''' <summary>Класс предоставляем методы для маппинга строк из базы данных в класс</summary>
 Friend Class Mapper
@@ -124,8 +124,8 @@ Friend Class Mapper
     End Function
 
     ''' <summary>Преобразует строку данных в объект DynamicObject</summary>
-    Friend Shared Function FromDictionaryToDynamic(row As Dictionary(Of String, Object)) As DynamicRow
-        Return New DynamicRow(row)
+    Friend Shared Function FromDictionaryToDynamic(row As Dictionary(Of String, Object)) As DynamicRowItem
+        Return New DynamicRowItem(row)
     End Function
 
     ''' <summary>Метод читает указанное свойство из класса</summary>

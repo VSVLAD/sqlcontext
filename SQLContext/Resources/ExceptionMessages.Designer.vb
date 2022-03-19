@@ -43,7 +43,7 @@ Namespace Resources
         Friend Shared ReadOnly Property ResourceManager() As Global.System.Resources.ResourceManager
             Get
                 If Object.ReferenceEquals(resourceMan, Nothing) Then
-                    Dim temp As Global.System.Resources.ResourceManager = New Global.System.Resources.ResourceManager("VSProject.MicroORM.ExceptionMessages", GetType(ExceptionMessages).Assembly)
+                    Dim temp As Global.System.Resources.ResourceManager = New Global.System.Resources.ResourceManager("VSProject.SQLContext.ExceptionMessages", GetType(ExceptionMessages).Assembly)
                     resourceMan = temp
                 End If
                 Return resourceMan

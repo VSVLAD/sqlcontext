@@ -1,5 +1,5 @@
 ﻿Imports System.Globalization
-Imports VSProject.MicroORM.Interfaces
+Imports VSProject.SQLContext.Interfaces
 
 Namespace Providers.SQLite
 

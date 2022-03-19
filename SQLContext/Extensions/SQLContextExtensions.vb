@@ -38,7 +38,7 @@ Namespace Extensions
         ''' <param name="SqlText">Текст запроса SQL</param>
         ''' <param name="Values">Массив необязательных аргументов для параметризованного запроса</param>
         <Extension>
-        Public Function ExecScalar(Of TResult)(Context As SQLContext, ByVal SqlText As String, ParamArray Values() As Object) As TResult
+        Public Function ExecScalar(Of TResult)(Context As SQLContext, SqlText As String, ParamArray Values() As Object) As TResult
             Return ExecScalar(Of TResult)(Context.OpenConnection, SqlText, Values)
         End Function
 
@@ -49,6 +49,8 @@ Namespace Extensions
         ''' <param name="Values">Массив необязательных аргументов для параметризованного запроса</param>
         <Extension>
         Public Function ExecReader(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As IDataReader
+            If Connection.State = ConnectionState.Closed Then Connection.Open()
+
             Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
             Dim sqlReader = sqlCmd.ExecuteReader()
 
@@ -62,6 +64,8 @@ Namespace Extensions
         ''' <param name="Values">Массив необязательных аргументов для параметризованного запроса</param>
         <Extension>
         Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As Integer
+            If Connection.State = ConnectionState.Closed Then Connection.Open()
+
             Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
             Dim sqlResult = sqlCmd.ExecuteNonQuery()
 
@@ -75,6 +79,8 @@ Namespace Extensions
         ''' <param name="Values">Массив необязательных аргументов для параметризованного запроса</param>
         <Extension>
         Public Function ExecScalar(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As Object
+            If Connection.State = ConnectionState.Closed Then Connection.Open()
+
             Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
@@ -88,7 +94,9 @@ Namespace Extensions
         ''' <param name="SqlText">Текст запроса SQL</param>
         ''' <param name="Values">Массив необязательных аргументов для параметризованного запроса</param>
         <Extension>
-        Public Function ExecScalar(Of TResult)(Connection As IDbConnection, ByVal SqlText As String, ParamArray Values() As Object) As TResult
+        Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As TResult
+            If Connection.State = ConnectionState.Closed Then Connection.Open()
+
             Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
