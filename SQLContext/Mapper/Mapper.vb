@@ -1,6 +1,7 @@
 ﻿Imports System.Reflection
 Imports VSProject.SQLContext.Attributes
 Imports VSProject.SQLContext.Dynamic
+Imports VSProject.SQLContext.Interfaces
 
 ''' <summary>Класс предоставляем методы для маппинга строк из базы данных в класс</summary>
 Friend Class Mapper
@@ -29,21 +30,26 @@ Friend Class Mapper
             For Each xClassProperty In typeClass.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
 
                 Dim columnInfo As New ColumnInformation With {
-                .PropertyName = xClassProperty.Name,
-                .PropertyType = ValueTypeFrom(xClassProperty.PropertyType)
-            }
+                    .PropertyName = xClassProperty.Name,
+                    .PropertyType = ValueTypeFrom(xClassProperty.PropertyType)
+                }
 
                 For Each xAttribute In xClassProperty.GetCustomAttributes(True)
                     If TypeOf xAttribute Is ColumnAttribute Then
-
                         Dim attrColumn = DirectCast(xAttribute, ColumnAttribute)
                         columnInfo.ColumnName = attrColumn.Name
                         columnInfo.ColumnType = attrColumn.DataType
-                    End If
 
-                    If TypeOf xAttribute Is PrimaryKeyAttribute Then columnInfo.PrimaryKey = True
-                    If TypeOf xAttribute Is AutoIncrementAttribute Then columnInfo.AutoIncrement = True
-                    If TypeOf xAttribute Is ProgrammableAttribute Then columnInfo.Programmable = True
+                    ElseIf TypeOf xAttribute Is PrimaryKeyAttribute Then
+                        columnInfo.PrimaryKey = True
+
+                    ElseIf TypeOf xAttribute Is AutoIncrementAttribute Then
+                        columnInfo.AutoIncrement = True
+
+                    ElseIf TypeOf xAttribute Is ProgrammableAttribute Then
+                        columnInfo.Programmable = True
+
+                    End If
                 Next
 
                 'Если название и тип для столбца не были задано через аттрибуты, используем тогда имя и тип свойства
@@ -60,37 +66,40 @@ Friend Class Mapper
     End Function
 
 
-    ''' <summary>Преобразует строку данных в объект пользвательского класса</summary>
-    Friend Shared Function FromDictionaryToClass(Of T)(row As Dictionary(Of String, Object)) As T
-        Dim typeClass As Type = GetType(T)
+    ''' <summary>Преобразует строку данных в объект пользовательского типа</summary>
+    Friend Shared Function FromDictionaryToType(Of T)(row As Dictionary(Of String, Object), contextOptions As SQLContextOptions) As T
+        Dim typeClass = GetType(T)
 
-        ' Если TClass является простым типом
-        If typeClass.IsArray Then
+        ' Если TClass является массивом
+        If typeClass.IsArray AndAlso typeClass.GetElementType() Is GetType(Object) Then
 
-            'Dim src() As Object = CType(row.Values.Select(Function(v)
-            '                                                  Dim packObject As Object
-            '                                                  packObject = v
-            '                                                  Return packObject
-            '                                              End Function).ToArray(), Object())
+            Dim resultArray(row.Count - 1) As Object
+            Dim ind As Integer
 
+            For Each val In row.Values
+                resultArray(ind) = val
+                ind += 1
+            Next
 
+            Return CType(resultArray, Object)
 
-            'Array.Copy(src, dst, src.Length)
-
-            Throw New NotImplementedException(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_ARRAY)
-
+            ' Если простой значимый тип
         ElseIf typeClass.IsPrimitive OrElse typeClass.IsValueType OrElse typeClass Is GetType(String) Then
             If IsNullableType(typeClass) Then
 
-                'Dim result As T
-                'Dim first As row.Values.First
+                'Dim resultValue As T = Activator.CreateInstance(Of T)
+                'typeClass.GetField("value", BindingFlags.Instance Or BindingFlags.Static Or BindingFlags.NonPublic).SetValue(resultValue, row.Values.First())
+
+                'Return resultValue
+
                 Throw New NotImplementedException(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_NULLABLE)
             Else
                 Return CType(row.Values.First(), T)
             End If
 
-        Else
             ' Если TClass является классом
+        ElseIf typeClass.IsClass Then
+
             Dim tableInfo As TableInformation
 
             'Проверка типа в кеше
@@ -116,11 +125,15 @@ Friend Class Mapper
                 If prop Is Nothing Then Continue For
 
                 ' Записываем в свойство значение
-                prop.SetValue(resultObject, SQLContextOptions.Reader.GetPropertyValue(keyRowData.Value, ci.ColumnType, ci.PropertyType), Nothing)
+                prop.SetValue(resultObject, contextOptions.Reader.GetPropertyValue(keyRowData.Value, ci.ColumnType, ci.PropertyType), Nothing)
             Next
 
             Return resultObject
         End If
+
+        ' В остальных случаях, когда тип T не поддерживается
+        Throw New NotImplementedException(String.Format(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_TYPE, typeClass.ToString()))
+
     End Function
 
     ''' <summary>Преобразует строку данных в объект DynamicObject</summary>

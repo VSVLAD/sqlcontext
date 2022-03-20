@@ -51,7 +51,7 @@ Namespace Extensions
         Public Function ExecReader(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As IDataReader
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
+            Dim sqlCmd = PreparedQuery.Prepare(SqlText, Connection, Values)
             Dim sqlReader = sqlCmd.ExecuteReader()
 
             If Values.Length = 0 Then sqlCmd.Dispose()
@@ -66,7 +66,7 @@ Namespace Extensions
         Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As Integer
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
+            Dim sqlCmd = PreparedQuery.Prepare(SqlText, Connection, Values)
             Dim sqlResult = sqlCmd.ExecuteNonQuery()
 
             If Values.Length = 0 Then sqlCmd.Dispose()
@@ -81,7 +81,7 @@ Namespace Extensions
         Public Function ExecScalar(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As Object
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
+            Dim sqlCmd = PreparedQuery.Prepare(SqlText, Connection, Values)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
             If Values.Length = 0 Then sqlCmd.Dispose()
@@ -97,11 +97,16 @@ Namespace Extensions
         Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String, ParamArray Values() As Object) As TResult
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextOptions.PreparedCommand.Prepare(SqlText, Connection, Values)
+            Dim sqlCmd = PreparedQuery.Prepare(SqlText, Connection, Values)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
             If Values.Length = 0 Then sqlCmd.Dispose()
             Return CType(sqlResult, TResult)
+        End Function
+
+        <Extension>
+        Public Function ToParamArray(Of TKey, TValue)(Row As Dictionary(Of TKey, TValue)) As TValue()
+            Return Row.Values.ToArray()
         End Function
 
     End Module

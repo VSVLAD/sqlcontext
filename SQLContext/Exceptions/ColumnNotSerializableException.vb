@@ -4,8 +4,12 @@
     Public Class ColumnNotSerializableException
         Inherits SQLContextException
 
-        Public Sub New(ByVal Message As String)
+        Public Sub New(Message As String)
             MyBase.New(Message)
+        End Sub
+
+        Public Sub New(Message As String, InnerException As Exception)
+            MyBase.New(Message, InnerException)
         End Sub
 
         Public Sub New()

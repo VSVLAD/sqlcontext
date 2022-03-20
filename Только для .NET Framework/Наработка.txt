@@ -1,0 +1,19 @@
+    'Public Iterator Function SelectRowsFast(Of T)(SqlText As String, ParamArray Values() As Object) As IEnumerable(Of T)
+
+    '    ' Создаём команду с запросом
+    '    Dim sqlCn As IDbConnection = OpenConnection()
+    '    Dim sqlCmd As IDbCommand = SQLContextOptions.PreparedCommand.Prepare(SqlText, sqlCn, Values)
+
+    '    Using sqlRead As IDataReader = sqlCmd.ExecuteReader()
+    '        Dim compiledDynamicType = DynamicType.Compile(GetType(T))
+
+    '        While sqlRead.Read()
+    '            Dim resultObject = compiledDynamicType.YieldFromDataReader(sqlRead)
+
+    '            Yield CType(resultObject, T)
+    '        End While
+    '    End Using
+
+    '    ' Если запрос не из кеша, тогда очищаем команду
+    '    If Values.Length = 0 Then sqlCmd.Dispose()
+    'End Function

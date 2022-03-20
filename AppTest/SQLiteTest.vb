@@ -18,12 +18,55 @@ Module SQLiteTest
             Next
 
 
-            ' Читаем 1 столбец, маппим на простой тип
-            Console.WriteLine("Тест. Выборка 1 столбца с простым типом")
+            ' Читаем 1 столбец, маппим на класс
+            Console.WriteLine("Тест. Выборка 1 столбца и маппим на класс")
             Console.ReadKey()
 
             For Each row In context.SelectRows(Of ClassTest)("select id, name, ondate from test")
                 Console.WriteLine($"Ваша запись {row.Name}")
+            Next
+
+            ' Читаем 1 столбец, маппим на тип массив
+            Console.WriteLine("Тест. Выборка 2 столбцов и маппим на массив")
+            Console.ReadKey()
+
+            For Each row In context.SelectRows(Of Object())("select id, name from test")
+                Console.WriteLine($"Ваша запись {row(0)} - {row(1)}")
+            Next
+
+            ' Читаем 1 столбец, маппим на простой тип
+            Console.WriteLine("Тест. Выборка 1 столбца и маппим на простой значимый тип")
+            Console.ReadKey()
+
+            For Each row In context.SelectRows(Of Integer)("select id, name from test")
+                Console.WriteLine($"Ваша запись {row}")
+            Next
+
+            Console.WriteLine("Тест. Выборка записей и передаём параметры в массиве")
+            Console.ReadKey()
+
+            For Each row In context.SelectRows(Of ClassTest)("select * from test where name like :name_s and id >= :id_i", "First %", 5)
+                Console.WriteLine($"Ваша запись {row.ID} {row.Name} {row.OnDateValue}")
+            Next
+
+            Console.WriteLine("Тест. Выборка записей и передаём параметры в словаре, возвращаем словарь данных")
+            Console.ReadKey()
+
+            For Each row In context.SelectRows("select * from test where name like :name_s and id >= :id_i", New Dictionary(Of String, Object) From {
+                                                                                                                                {":id_i", 5},
+                                                                                                                                {":name_s", "First %"}
+                                                                                                                            })
+                Console.WriteLine($"Ваша запись {row("id")} {row("name")} {row("ondate")}")
+            Next
+
+            Console.WriteLine("Тест. Выборка записей и передаём параметры в словаре, возвращаем класс")
+            Console.ReadKey()
+
+            For Each row In context.SelectRows(Of ClassTest)("select * from test where name like :name_s and id >= :id_i", New Dictionary(Of String, Object) From {
+                                                                                                                                    {":id_i", 5},
+                                                                                                                                    {":name_s", "First %"}
+                                                                                                                                })
+                Console.WriteLine($"Ваша запись {row.ID} {row.Name} {row.OnDateValue}")
             Next
 
 

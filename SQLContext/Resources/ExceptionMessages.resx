@@ -118,22 +118,16 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="COLUMN_NOT_SERIALIZABLE" xml:space="preserve">
-    <value>Not found rule serialization for value type {0} from {1} to {2}</value>
+    <value>Not found serialization rule for value type {0} from {1} to {2}</value>
   </data>
   <data name="CONNECTION_MUST_BE_CREATED" xml:space="preserve">
     <value>Connection object must be created before using in SQLContext</value>
   </data>
-  <data name="NOT_IMPLEMENTED_WITH_ARRAY" xml:space="preserve">
-    <value>Not yet implemented with arrays</value>
-  </data>
   <data name="NOT_IMPLEMENTED_WITH_NULLABLE" xml:space="preserve">
-    <value>Not yet implemented with Nullable types</value>
+    <value>Not implemented with Nullable types</value>
   </data>
-  <data name="PARAMETERIZED_QUERY_MUST_USE_SUFFIX" xml:space="preserve">
-    <value>For parameterized queries, you must use the suffix in the parameter name!
-
-Suffixes: S - string, R - fractional number, I - integer, D - datetime. Knowing the suffix, the class correctly declares the parameter type.
-Examples: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D"</value>
+  <data name="NOT_IMPLEMENTED_WITH_TYPE" xml:space="preserve">
+    <value>Not Implemented mapping with type {0}</value>
   </data>
   <data name="PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES" xml:space="preserve">
     <value>Values passed for parameterized query, but parameter names not recognized!
@@ -141,5 +135,11 @@ Named parameters must use the prefixes and suffixes. @param_name_s or :param_nam
 
 Suffixes: S - string, R - fractional number, I - integer, D - datetime. Knowing the suffix, the class correctly declares the parameter type.
 Examples: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D"</value>
+  </data>
+  <data name="PREPARED_QUERY_CACHED_COMMAND_IS_NULL" xml:space="preserve">
+    <value>The cached command is not initialized. Check that command object are not deleted by user code throw Null assignment or Dispose method</value>
+  </data>
+  <data name="PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY" xml:space="preserve">
+    <value>Parameter {0} passed in parameter dictionary was not found in SQL query</value>
   </data>
 </root>

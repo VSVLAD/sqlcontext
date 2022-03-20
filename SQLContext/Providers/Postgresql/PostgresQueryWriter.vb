@@ -84,11 +84,11 @@ Namespace Providers.PostgreSQL
         End Function
 
         Public Function GetTableName(TableName As String) As String Implements IQueryWriter.GetTableName
-            Return String.Format("""{0}""", TableName)
+            Return $"""{TableName}"""
         End Function
 
         Public Function GetColumnName(ColumnName As String) As String Implements IQueryWriter.GetColumnName
-            Return String.Format("""{0}""", ColumnName)
+            Return $"""{ColumnName}"""
         End Function
 
         Public Function GetColumnValue(Value As Object, Source As Type, Destination As Type) As String Implements IQueryWriter.GetColumnValue

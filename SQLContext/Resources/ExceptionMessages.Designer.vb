@@ -65,7 +65,7 @@ Namespace Resources
         End Property
         
         '''<summary>
-        '''  Ищет локализованную строку, похожую на Not found rule serialization for value type {0} from {1} to {2}.
+        '''  Ищет локализованную строку, похожую на Not found serialization rule for value type {0} from {1} to {2}.
         '''</summary>
         Friend Shared ReadOnly Property COLUMN_NOT_SERIALIZABLE() As String
             Get
@@ -83,16 +83,7 @@ Namespace Resources
         End Property
         
         '''<summary>
-        '''  Ищет локализованную строку, похожую на Not yet implemented with arrays.
-        '''</summary>
-        Friend Shared ReadOnly Property NOT_IMPLEMENTED_WITH_ARRAY() As String
-            Get
-                Return ResourceManager.GetString("NOT_IMPLEMENTED_WITH_ARRAY", resourceCulture)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Ищет локализованную строку, похожую на Not yet implemented with Nullable types.
+        '''  Ищет локализованную строку, похожую на Not implemented with Nullable types.
         '''</summary>
         Friend Shared ReadOnly Property NOT_IMPLEMENTED_WITH_NULLABLE() As String
             Get
@@ -101,14 +92,11 @@ Namespace Resources
         End Property
         
         '''<summary>
-        '''  Ищет локализованную строку, похожую на For parameterized queries, you must use the suffix in the parameter name!
-        '''
-        '''Suffixes: S - string, R - fractional number, I - integer, D - datetime. Knowing the suffix, the class correctly declares the parameter type.
-        '''Examples: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D&quot;.
+        '''  Ищет локализованную строку, похожую на Not Implemented mapping with type {0}.
         '''</summary>
-        Friend Shared ReadOnly Property PARAMETERIZED_QUERY_MUST_USE_SUFFIX() As String
+        Friend Shared ReadOnly Property NOT_IMPLEMENTED_WITH_TYPE() As String
             Get
-                Return ResourceManager.GetString("PARAMETERIZED_QUERY_MUST_USE_SUFFIX", resourceCulture)
+                Return ResourceManager.GetString("NOT_IMPLEMENTED_WITH_TYPE", resourceCulture)
             End Get
         End Property
         
@@ -122,6 +110,24 @@ Namespace Resources
         Friend Shared ReadOnly Property PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES() As String
             Get
                 Return ResourceManager.GetString("PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Ищет локализованную строку, похожую на The cached command is not initialized. Check that command object are not deleted by user code throw Null assignment or Dispose method.
+        '''</summary>
+        Friend Shared ReadOnly Property PREPARED_QUERY_CACHED_COMMAND_IS_NULL() As String
+            Get
+                Return ResourceManager.GetString("PREPARED_QUERY_CACHED_COMMAND_IS_NULL", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Ищет локализованную строку, похожую на Parameter {0} passed in parameter dictionary was not found in SQL query.
+        '''</summary>
+        Friend Shared ReadOnly Property PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY() As String
+            Get
+                Return ResourceManager.GetString("PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY", resourceCulture)
             End Get
         End Property
     End Class

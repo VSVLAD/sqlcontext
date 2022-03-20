@@ -123,17 +123,11 @@
   <data name="CONNECTION_MUST_BE_CREATED" xml:space="preserve">
     <value>Объект соединения должен быть создан перед использованием в SQLContext</value>
   </data>
-  <data name="NOT_IMPLEMENTED_WITH_ARRAY" xml:space="preserve">
-    <value>Пока ещё не реализовано с массивам</value>
+  <data name="NOT_IMPLEMENTED_WITH_ARRAY_NOT_OBJECT" xml:space="preserve">
+    <value>Не реализован маппинг для типа {0}</value>
   </data>
   <data name="NOT_IMPLEMENTED_WITH_NULLABLE" xml:space="preserve">
-    <value>Пока ещё не реализовано с Nullable типами</value>
-  </data>
-  <data name="PARAMETERIZED_QUERY_MUST_USE_SUFFIX" xml:space="preserve">
-    <value>Для параметризованных запросов необходимо в имени параметра использовать суффикс!
-
-Суффиксы: S - строка, R - дробное число, I - целое, D - дата и время. Зная суффикс, класс правильно декларирует тип параметра.
-Примеры: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D</value>
+    <value>Не реализовано с Nullable типами</value>
   </data>
   <data name="PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES" xml:space="preserve">
     <value>Переданы значения для параметризованного запроса, но не распознаны названия параметров!
@@ -141,5 +135,11 @@
 
 Суффиксы: S - строка, R - дробное число, I - целое, D - дата и время. Зная суффикс, класс правильно декларирует тип параметра.
 Примеры: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D</value>
+  </data>
+  <data name="PREPARED_QUERY_CACHED_COMMAND_IS_NULL" xml:space="preserve">
+    <value>Кешированная команда не инициализирована. Необходимо проверить, что объекты для команд не удаляются пользовательским кодом через присвоения Null или вызовом Dispose</value>
+  </data>
+  <data name="PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY" xml:space="preserve">
+    <value>Параметр {0}, переданный в словаре параметров не найден в SQL запросе</value>
   </data>
 </root>

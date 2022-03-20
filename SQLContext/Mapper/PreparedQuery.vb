@@ -6,8 +6,10 @@ Imports VSProject.SQLContext.Exceptions
 ''' <summary>Класс для параметризации запросов SQL</summary>
 Public Class PreparedQuery
 
-    Private reParams As New Regex("((?<![\:|@])[\:|@]\w{1,})", RegexOptions.Compiled Or RegexOptions.IgnoreCase Or RegexOptions.Multiline)
-    Private queries As New Concurrent.ConcurrentDictionary(Of String, PreparedCommand)
+    Private Shared queries As New Concurrent.ConcurrentDictionary(Of String, PreparedCommand)
+    Private Shared reParams As New Regex("((?<![\:|@])[\:|@]\w+_[SsDdIiRr]\b)", RegexOptions.Compiled Or RegexOptions.IgnoreCase Or RegexOptions.Multiline)
+
+    Private Shared lockerClear As New Object
 
     ''' <summary>Класс для подготовленной команды и списка параметров</summary>
     Private Class PreparedCommand
@@ -32,30 +34,127 @@ Public Class PreparedQuery
     End Class
 
     ''' <summary>Очистить кеш запросов</summary>
-    Public Sub ClearCache()
+    Public Shared Sub ClearCache()
+        If queries.Count > 0 Then
 
-        ' Вызвать финализацию
-        For Each xCmd In queries.Values()
-            xCmd.ItemCommand.Parameters.Clear()
-            xCmd.ItemCommand.Dispose()
+            SyncLock lockerClear
+                If queries.Count > 0 Then
 
-            xCmd.ItemParam1 = Nothing
-            xCmd.ItemParam2 = Nothing
-            xCmd.ItemParam3 = Nothing
-            xCmd.ItemParam4 = Nothing
-        Next
+                    ' Вызвать финализацию
+                    For Each xCmd In queries.Values()
+                        xCmd.ItemCommand.Parameters.Clear()
+                        xCmd.ItemCommand.Dispose()
 
-        ' Очищаем ссылки
-        queries.Clear()
+                        xCmd.ItemParam1 = Nothing
+                        xCmd.ItemParam2 = Nothing
+                        xCmd.ItemParam3 = Nothing
+                        xCmd.ItemParam4 = Nothing
+                    Next
 
+                    ' Очищаем ссылки
+                    queries.Clear()
+
+                End If
+            End SyncLock
+
+        End If
     End Sub
+
+
+    ''' <summary>Метод для параметризованных запросов выполняет их кеширование, готовит параметры и применяет значения</summary>
+    ''' <param name="SqlText">Текст обычного запроса или с параметрами</param>
+    ''' <param name="Connection">Объект соединения</param>
+    ''' <param name="Params">Значения параметров в виде словаря, где ключ - имя параметра с суффиксом</param>
+    ''' <returns>Ссылка на команду IDbCommand</returns>
+    Public Shared Function Prepare(SqlText As String, Connection As IDbConnection, Params As IDictionary(Of String, Object)) As IDbCommand
+
+        ' Если нет параметров, отдаём простую команду
+        If Params Is Nothing OrElse (Params IsNot Nothing AndAlso Params.Count = 0) Then
+
+            Dim retCmd = Connection.CreateCommand()
+            retCmd.CommandType = CommandType.Text
+            retCmd.CommandText = SqlText
+            Return retCmd
+
+        Else
+
+            ' Ищем параметры в кеше или создаём новый
+            Dim cachedPrepared As PreparedCommand
+            Dim queryHash As String = MD5Hash(String.Concat(Environment.CurrentManagedThreadId, "-D-", SqlText))
+
+            ' Если есть в кеше, то актуализируем коннекшн и отдаём
+            If queries.ContainsKey(queryHash) Then
+                cachedPrepared = queries(queryHash)
+                cachedPrepared.ItemCommand.Connection = Connection
+
+            Else
+                ' Создаём подготовленную команду
+                cachedPrepared = New PreparedCommand()
+                cachedPrepared.Text = SqlText
+                cachedPrepared.Hash = queryHash
+
+                cachedPrepared.ItemCommand = Connection.CreateCommand()
+                cachedPrepared.ItemCommand.CommandType = CommandType.Text
+                cachedPrepared.ItemCommand.CommandText = SqlText
+
+                ' Ищем параметры
+                Dim listParamMatches = reParams.Matches(SqlText).Cast(Of Match).Select(Function(m) m.Value).ToList()
+
+                ' Создаём параметры
+                For Each k In Params
+                    Dim param As IDbDataParameter = cachedPrepared.ItemCommand.CreateParameter()
+                    param.ParameterName = k.Key
+
+                    ' Проверим что в SQL запросе присутствует параметр переданный в словаре
+                    If Not listParamMatches.Exists(Function(paramName) paramName = param.ParameterName) Then
+                        Throw New SQLContextException(String.Format(Resources.ExceptionMessages.PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY, param.ParameterName))
+                    End If
+
+                    ' Если ещё не заведён в словарь параметр с таким именем
+                    If Not cachedPrepared.ItemCommand.Parameters.Contains(param.ParameterName) Then
+
+                        ' Определяем тип параметра по суффиксу
+                        Select Case param.ParameterName.Substring(param.ParameterName.Length - 2, 2).ToLowerInvariant()
+                            Case "_i"
+                                param.DbType = DbType.Int64
+                            Case "_s"
+                                param.DbType = DbType.String
+                            Case "_d"
+                                param.DbType = DbType.DateTime
+                            Case "_r"
+                                param.DbType = DbType.Double
+                        End Select
+
+                        cachedPrepared.ItemCommand.Parameters.Add(param)
+                        cachedPrepared.ParameterCount += 1
+                    End If
+                Next
+
+                ' Добавляем параметр в конкурентную коллекцию (кешируем)
+                queries.TryAdd(queryHash, cachedPrepared)
+
+            End If
+
+            ' Проверяем, что внешний код не уничтожил команду
+            If cachedPrepared.ItemCommand Is Nothing Then
+                Throw New SQLContextException(Resources.ExceptionMessages.PREPARED_QUERY_CACHED_COMMAND_IS_NULL)
+            End If
+
+            ' Применяем значения параметров к команде
+            For Each k In Params
+                CType(cachedPrepared.ItemCommand.Parameters.Item(k.Key), IDbDataParameter).Value = k.Value
+            Next
+
+            Return cachedPrepared.ItemCommand
+        End If
+    End Function
 
     ''' <summary>Метод для параметризованных запросов выполняет их кеширование, готовит параметры и применяет значения</summary>
     ''' <param name="SqlText">Текст обычного запроса или с параметрами</param>
     ''' <param name="Connection">Объект соединения</param>
     ''' <param name="Values">Значения параметров в виде ParamArray массива</param>
     ''' <returns>Ссылка на команду IDbCommand</returns>
-    Public Function Prepare(SqlText As String, Connection As IDbConnection, ParamArray Values() As Object) As IDbCommand
+    Public Shared Function Prepare(SqlText As String, Connection As IDbConnection, ParamArray Values() As Object) As IDbCommand
 
         ' Если нет параметров, отдаём простую команду
         If Values.Length = 0 Then
@@ -69,7 +168,7 @@ Public Class PreparedQuery
 
             ' Ищем параметры в кеше или создаём новый
             Dim cachedPrepared As PreparedCommand
-            Dim queryHash As String = MD5Hash(String.Concat(Environment.CurrentManagedThreadId, "=", SqlText))
+            Dim queryHash As String = MD5Hash(String.Concat(Environment.CurrentManagedThreadId, "-V-", SqlText))
 
             ' Если есть в кеше, то актуализируем коннекшн и отдаём
             If queries.ContainsKey(queryHash) Then
@@ -91,22 +190,24 @@ Public Class PreparedQuery
                     Dim param As IDbDataParameter = cachedPrepared.ItemCommand.CreateParameter()
                     param.ParameterName = m.Groups(0).Value
 
-                    ' Определяем тип параметра по суффиксу
-                    Select Case param.ParameterName.Substring(param.ParameterName.Length - 1, 1).ToUpperInvariant()
-                        Case "I"
-                            param.DbType = DbType.Int64
-                        Case "S"
-                            param.DbType = DbType.String
-                        Case "D"
-                            param.DbType = DbType.DateTime
-                        Case "R"
-                            param.DbType = DbType.Double
-                        Case Else
-                            Throw New SQLContextException(Resources.ExceptionMessages.PARAMETERIZED_QUERY_MUST_USE_SUFFIX)
-                    End Select
+                    ' Если ещё не заведён в словарь параметр с таким именем
+                    If Not cachedPrepared.ItemCommand.Parameters.Contains(param.ParameterName) Then
 
-                    cachedPrepared.ItemCommand.Parameters.Add(param)
-                    cachedPrepared.ParameterCount += 1
+                        ' Определяем тип параметра по суффиксу
+                        Select Case param.ParameterName.Substring(param.ParameterName.Length - 2, 2).ToLowerInvariant()
+                            Case "_i"
+                                param.DbType = DbType.Int64
+                            Case "_s"
+                                param.DbType = DbType.String
+                            Case "_d"
+                                param.DbType = DbType.DateTime
+                            Case "_r"
+                                param.DbType = DbType.Double
+                        End Select
+
+                        cachedPrepared.ItemCommand.Parameters.Add(param)
+                        cachedPrepared.ParameterCount += 1
+                    End If
                 Next
 
                 ' Для быстрого доступа вытаскиваем первые 4 параметра
@@ -130,11 +231,16 @@ Public Class PreparedQuery
                 End Select
 
                 ' Добавляем параметр в конкурентную коллекцию (кешируем)
-                Do While Not queries.TryAdd(queryHash, cachedPrepared)
-                Loop
+                queries.TryAdd(queryHash, cachedPrepared)
+
             End If
 
-            ' Применяем значения параметров к команде
+            ' Проверяем, что внешний код не уничтожил команду
+            If cachedPrepared.ItemCommand Is Nothing Then
+                Throw New SQLContextException(Resources.ExceptionMessages.PREPARED_QUERY_CACHED_COMMAND_IS_NULL)
+            End If
+
+
             Select Case cachedPrepared.ParameterCount
                 Case 1
                     cachedPrepared.ItemParam1.Value = Values(0)
@@ -155,6 +261,7 @@ Public Class PreparedQuery
                     cachedPrepared.ItemParam4.Value = Values(3)
 
                 Case Else
+
                     For ind = 0 To cachedPrepared.ParameterCount - 1
                         CType(cachedPrepared.ItemCommand.Parameters(ind), IDbDataParameter).Value = Values(ind)
                     Next
