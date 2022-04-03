@@ -104,11 +104,6 @@ Namespace Extensions
             Return CType(sqlResult, TResult)
         End Function
 
-        <Extension>
-        Public Function ToParamArray(Of TKey, TValue)(Row As Dictionary(Of TKey, TValue)) As TValue()
-            Return Row.Values.ToArray()
-        End Function
-
     End Module
 
 End Namespace

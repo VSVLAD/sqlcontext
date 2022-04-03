@@ -47,7 +47,7 @@ Namespace NUnitAutoTest
         Public Sub SelectRowsCountAsClassTest()
             Try
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim row = context.SelectRows(Of AddressInfo)("select * from address where id = 1").First
+                    Dim row = context.SelectRows(Of AddressInfo)("select * from address where id = 1").FirstOrDefault()
                     Assert.AreEqual("Краснодар", row.City)
                 End Using
 
@@ -61,7 +61,7 @@ Namespace NUnitAutoTest
         Public Sub SelectRowsCountAsDictionaryTest()
             Try
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim row = context.SelectRows("select * from address where id = 1").First
+                    Dim row = context.SelectRows("select * from address where id = 1").FirstOrDefault()
                     Assert.AreEqual("Краснодар", row("city"))
                 End Using
 
@@ -75,7 +75,7 @@ Namespace NUnitAutoTest
         Public Sub SelectRowsCountAsDynamicTest()
             Try
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim row = context.SelectRowsDynamic("select * from address where id = 1").First
+                    Dim row = context.SelectRowsDynamic("select * from address where id = 1").FirstOrDefault()
                     Assert.AreEqual("Краснодар", row.City)
                 End Using
 
@@ -89,7 +89,7 @@ Namespace NUnitAutoTest
         Public Sub SelectRowsIntegerNullTest()
             Try
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim addr = context.SelectRows(Of AddressInfo)("select home from address where street = 'Заводская'").FirstOrDefault
+                    Dim addr = context.SelectRows(Of AddressInfo)("select home from address where street = 'Заводская'").FirstOrDefault()
                     Assert.IsNull(addr.Home)
                 End Using
 
@@ -103,7 +103,7 @@ Namespace NUnitAutoTest
         Public Sub SelectRowsBooleanTrueTest()
             Try
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim addr = context.SelectRows(Of AddressInfo)("select * from address where street = 'Заводская'").FirstOrDefault
+                    Dim addr = context.SelectRows(Of AddressInfo)("select * from address where street = 'Заводская'").FirstOrDefault()
                     Assert.IsTrue(addr.IsCommercial)
                 End Using
 
@@ -117,7 +117,7 @@ Namespace NUnitAutoTest
         Public Sub SelectRowsBooleanFalseTest()
             Try
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim addr = context.SelectRows(Of AddressInfo)("select * from address where street = 'Тургенева'").FirstOrDefault
+                    Dim addr = context.SelectRows(Of AddressInfo)("select * from address where street = 'Тургенева'").FirstOrDefault()
                     Assert.IsFalse(addr.IsCommercial)
                 End Using
 
