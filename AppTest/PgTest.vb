@@ -8,11 +8,11 @@ Module PgTest
 
     Public Sub Main()
 
-        Using context As New SQLContext(New NpgsqlConnection("Server=localhost;Port=5432;Database=metric_db;User Id=postgres;Password=" & IO.File.ReadAllText("C:\pwd.txt")))
+        Using context As New SQLContext(New NpgsqlConnection("Server=localhost;Port=5432;Database=metric_db;User Id=postgres;"))
             context.Options.Writer = New PostgreSQL.PostgresQueryWriter
             context.Options.Reader = New PostgreSQL.PostgresQueryReader
 
-            context.ExecNonQuery("drop table test")
+            context.ExecNonQuery("drop table if exists test")
             context.ExecNonQuery("create table test(id integer, name char(10), ondate timestamp)")
 
             For Each num In Enumerable.Range(1, 10)

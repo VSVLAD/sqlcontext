@@ -5,7 +5,7 @@ Imports VSProject.SQLContext.Extensions
 
 Module SQLiteTest
 
-    Sub Main()
+    Sub Main2()
 
         Using context = New SQLContext(New SQLiteConnection("Data Source=C:\test.db"))
             context.ExecNonQuery("drop table if exists test")
