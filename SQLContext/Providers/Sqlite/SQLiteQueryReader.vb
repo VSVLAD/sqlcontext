@@ -13,6 +13,17 @@ Namespace Providers.SQLite
         Private ReadOnly typeDouble As Type = GetType(Double)
         Private ReadOnly typeBoolean As Type = GetType(Boolean)
 
+        Private Shared dateFormats As String() = {
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss.f",
+            "yyyy-MM-dd HH:mm:ss.ff",
+            "yyyy-MM-dd HH:mm:ss.fff",
+            "yyyy-MM-dd HH:mm:ss.ffff",
+            "yyyy-MM-dd HH:mm:ss.fffff",
+            "yyyy-MM-dd HH:mm:ss.ffffff",
+            "yyyy-MM-dd HH:mm:ss.fffffff"
+        }
+
         Public Function GetPropertyValue(Value As Object, Source As Type, Destination As Type) As Object Implements IQueryReader.GetPropertyValue
 
             ' Если исходное значение было Null, вернём Null
@@ -35,7 +46,7 @@ Namespace Providers.SQLite
 
                 ' Для даты SQLite в виде строки. Дата в формате ISO 8606
                 If Source Is typeString AndAlso Destination Is typeDate Then
-                    Return Date.ParseExact(CStr(Value), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                    Return Date.ParseExact(CStr(Value), dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None)
                 End If
 
                 ' Для даты SQLite в виде целых чисел. Дата в формате Unix epoch
