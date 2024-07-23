@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\ExceptionMessages.Designer.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Import Include="System.Data" />
   </ItemGroup>
 
@@ -42,10 +46,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <CustomToolNamespace>Resources</CustomToolNamespace>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 
 </Project>

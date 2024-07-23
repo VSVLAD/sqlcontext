@@ -9,8 +9,6 @@ Friend Class ColumnInformation
 
     Public ColumnName As String
 
-    Public ColumnType As Type
-
     Public PropertyName As String
 
     Public PropertyType As Type

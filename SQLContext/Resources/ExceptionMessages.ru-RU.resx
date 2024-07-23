@@ -129,6 +129,9 @@
   <data name="NOT_IMPLEMENTED_WITH_NULLABLE" xml:space="preserve">
     <value>Не реализовано с Nullable типами</value>
   </data>
+  <data name="NO_CONVERT_NETTYPE_TO_DBTYPE" xml:space="preserve">
+    <value>SQLContext не имеет допустимого маппинга из значимого типа .NET в DBType для создания параметра</value>
+  </data>
   <data name="PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES" xml:space="preserve">
     <value>Переданы значения для параметризованного запроса, но не распознаны названия параметров!
 Поддерживаются именованные параметры с префиксами: @param_name_s и :param_name_s

@@ -129,6 +129,9 @@
   <data name="NOT_IMPLEMENTED_WITH_TYPE" xml:space="preserve">
     <value>Not Implemented mapping with type {0}</value>
   </data>
+  <data name="NO_CONVERT_NETTYPE_TO_DBTYPE" xml:space="preserve">
+    <value>SQLContext doesnt have mapping from .NET type to DBType</value>
+  </data>
   <data name="PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES" xml:space="preserve">
     <value>Values passed for parameterized query, but parameter names not recognized!
 Named parameters must use the prefixes and suffixes. @param_name_s or :param_name_s are supported.

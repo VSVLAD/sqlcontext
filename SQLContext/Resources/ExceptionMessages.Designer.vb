@@ -22,7 +22,7 @@ Namespace Resources
     '''<summary>
     '''  Класс ресурса со строгой типизацией для поиска локализованных строк и т.д.
     '''</summary>
-    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0"),  _
+    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0"),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute()>  _
     Friend Class ExceptionMessages
@@ -79,6 +79,15 @@ Namespace Resources
         Friend Shared ReadOnly Property CONNECTION_MUST_BE_CREATED() As String
             Get
                 Return ResourceManager.GetString("CONNECTION_MUST_BE_CREATED", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Ищет локализованную строку, похожую на SQLContext doesnt have mapping from .NET type to DBType.
+        '''</summary>
+        Friend Shared ReadOnly Property NO_CONVERT_NETTYPE_TO_DBTYPE() As String
+            Get
+                Return ResourceManager.GetString("NO_CONVERT_NETTYPE_TO_DBTYPE", resourceCulture)
             End Get
         End Property
         
