@@ -4,17 +4,30 @@
     <RootNamespace>VSProject.SQLContext</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>SQLContext</Title>
+    <Version>5.0.0</Version>
+    <Company>VS PROJECT</Company>
+    <Authors>Vladilen Kruglov</Authors>
+    <Copyright>Vladilen Kruglov</Copyright>
+    <PackageIcon>db.png</PackageIcon>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/VSVLAD/sqlcontext</RepositoryUrl>
+    <PackageTags>orm;sql;mapper;entity mapping</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>SQLContext.xml</DocumentationFile>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
+    <DefineTrace>False</DefineTrace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>SQLContext.xml</DocumentationFile>
+    <DefineTrace>False</DefineTrace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,6 +59,17 @@
 
   <ItemGroup>
     <Folder Include="Resources\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\db.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
