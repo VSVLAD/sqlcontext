@@ -112,28 +112,4 @@ Module SQLiteTest
     'End Sub
 
 
-
-    <Table("test")>
-    Public Class ClassTest
-
-        <PrimaryKey>
-        Public Property ID As Long
-
-        Public Property Name As String
-
-        <Column("ondate")>
-        Public Property OnDateValue As Date?
-
-        <Programmable>
-        Public Property Address As String
-
-        <Programmable>
-        Public Property Phone As Integer?
-
-        <Programmable>
-        Public Property Skype As Integer?
-
-    End Class
-
-
 End Module

@@ -26,24 +26,25 @@ Public Class ContextParameters
     ''' <summary>
     ''' Сформировать подготовленную команду по словарю, где ключ - имя параметра, а значение - .NET тип упакованный в Object
     ''' </summary>
-    Public Shared Function FromParametersToCommand(Connection As IDbConnection, SqlText As String, Paramerers As Dictionary(Of String, Object)) As IDbCommand
+    Public Shared Function FromDictionary(Connection As IDbConnection, SqlText As String, Paramerers As Dictionary(Of String, Object)) As IDbCommand
 
         ' Создаём объект для подготовленной команды
         Dim prepCommand = Connection.CreateCommand()
         prepCommand.CommandText = SqlText
 
-        For Each kv In Paramerers
+        If Paramerers IsNot Nothing Then
+            For Each kv In Paramerers
 
-            ' Создаём параметр с типом как значение свойства
-            Dim param = prepCommand.CreateParameter()
-            param.ParameterName = $"@{kv.Key}"
-            param.DbType = GetDbType(If(kv.Value, "").GetType())
-            param.Value = If(kv.Value, DBNull.Value)
+                ' Создаём параметр с типом как значение свойства
+                Dim param = prepCommand.CreateParameter()
+                param.ParameterName = $"@{kv.Key}"
+                param.DbType = GetDbType(If(kv.Value, "").GetType())
+                param.Value = If(kv.Value, DBNull.Value)
 
-            ' Добавляем параметр к команде
-            prepCommand.Parameters.Add(param)
-
-        Next
+                ' Добавляем параметр к команде
+                prepCommand.Parameters.Add(param)
+            Next
+        End If
 
         Return prepCommand
     End Function
@@ -51,15 +52,17 @@ Public Class ContextParameters
     ''' <summary>
     ''' Сформировать словарь с параметрами по свойствам из анонимного объекта
     ''' </summary>
-    Public Shared Function FromParametersToDictionary(Of TObject)(Paramerers As TObject) As Dictionary(Of String, Object)
+    Public Shared Function FromObject(Of TAnonymousObject)(Paramerers As TAnonymousObject) As Dictionary(Of String, Object)
         Dim retDict As New Dictionary(Of String, Object)
 
-        Dim type = GetType(TObject)
-        Dim props = type.GetProperties()
+        If Paramerers IsNot Nothing Then
+            Dim type = GetType(TAnonymousObject)
+            Dim props = type.GetProperties()
 
-        For Each prop In props
-            retDict.Add(prop.Name, prop.GetValue(Paramerers))
-        Next
+            For Each prop In props
+                retDict.Add(prop.Name, prop.GetValue(Paramerers))
+            Next
+        End If
 
         Return retDict
     End Function

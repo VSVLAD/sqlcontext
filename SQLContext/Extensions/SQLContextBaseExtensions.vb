@@ -6,103 +6,118 @@ Namespace Extensions
     ''' <summary>Общие методы для выполнения простых запросов</summary>
     Public Module SQLContextBaseExtensions
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает объект IDataReader</summary>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
+#Region "       Перегрузки в которых текушщий объект это IDbConnection и параметры словарь "
+
         <Extension>
         Public Function ExecReader(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As IDataReader
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = ContextParameters.FromParametersToCommand(Connection, SqlText, Parameters)
+            Dim sqlCmd = ContextParameters.FromDictionary(Connection, SqlText, Parameters)
             Dim sqlReader = sqlCmd.ExecuteReader()
 
             sqlCmd.Dispose()
             Return sqlReader
         End Function
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает количество обработанных записей</summary>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
         <Extension>
         Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As Integer
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = ContextParameters.FromParametersToCommand(Connection, SqlText, Parameters)
+            Dim sqlCmd = ContextParameters.FromDictionary(Connection, SqlText, Parameters)
             Dim sqlResult = sqlCmd.ExecuteNonQuery()
 
             sqlCmd.Dispose()
             Return sqlResult
         End Function
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает скалярное значение типа Object</summary>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
         <Extension>
         Public Function ExecScalar(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As Object
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = ContextParameters.FromParametersToCommand(Connection, SqlText, Parameters)
+            Dim sqlCmd = ContextParameters.FromDictionary(Connection, SqlText, Parameters)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
             sqlCmd.Dispose()
             Return sqlResult
         End Function
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает скалярное значение типа TResult</summary>
-        ''' <typeparam name="TResult">Тип результата скалярного значения</typeparam>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
         <Extension>
         Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As TResult
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = ContextParameters.FromParametersToCommand(Connection, SqlText, Parameters)
+            Dim sqlCmd = ContextParameters.FromDictionary(Connection, SqlText, Parameters)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
             sqlCmd.Dispose()
             Return CType(sqlResult, TResult)
         End Function
+#End Region
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает объект IDataReader</summary>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
+#Region "       Перегрузки в которых текушщий объект это IDbConnection и параметры анонимный объект "
         <Extension>
         Public Function ExecReader(Connection As IDbConnection, SqlText As String, Parameters As Object) As IDataReader
-            Return ExecReader(Connection, SqlText, ContextParameters.FromParametersToDictionary(Parameters))
+            Return ExecReader(Connection, SqlText, ContextParameters.FromObject(Parameters))
         End Function
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает количество обработанных записей</summary>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
         <Extension>
         Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String, Parameters As Object) As Integer
-            Return ExecNonQuery(Connection, SqlText, ContextParameters.FromParametersToDictionary(Parameters))
+            Return ExecNonQuery(Connection, SqlText, ContextParameters.FromObject(Parameters))
         End Function
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает скалярное значение типа Object</summary>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
         <Extension>
         Public Function ExecScalar(Connection As IDbConnection, SqlText As String, Parameters As Object) As Object
-            Return ExecScalar(Connection, SqlText, ContextParameters.FromParametersToDictionary(Parameters))
+            Return ExecScalar(Connection, SqlText, ContextParameters.FromObject(Parameters))
         End Function
 
-        ''' <summary>Метод выполняет SQL запрос и возвращает скалярное значение типа TResult</summary>
-        ''' <typeparam name="TResult">Тип результата скалярного значения</typeparam>
-        ''' <param name="Connection">Объект соединения в контексте которого будет выполнен запрос</param>
-        ''' <param name="SqlText">Текст запроса SQL</param>
-        ''' <param name="Parameters">Объект содержащий свойства которые будут подготовленными параметрами</param>
         <Extension>
         Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String, Parameters As Object) As TResult
-            Return ExecScalar(Of TResult)(Connection, SqlText, ContextParameters.FromParametersToDictionary(Parameters))
+            Return ExecScalar(Of TResult)(Connection, SqlText, ContextParameters.FromObject(Parameters))
         End Function
+#End Region
+
+#Region "       Перегрузки в которых текушщий объект это SQLContext и параметры словарь "
+        <Extension>
+        Public Function ExecReader(Connection As SQLContext, SqlText As String, Parameters As Dictionary(Of String, Object)) As IDataReader
+            Return ExecReader(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+
+        <Extension>
+        Public Function ExecNonQuery(Connection As SQLContext, SqlText As String, Parameters As Dictionary(Of String, Object)) As Integer
+            Return ExecNonQuery(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Connection As SQLContext, SqlText As String, Parameters As Dictionary(Of String, Object)) As Object
+            Return ExecScalar(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Of TResult)(Connection As SQLContext, SqlText As String, Parameters As Dictionary(Of String, Object)) As TResult
+            Return ExecScalar(Of TResult)(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+#End Region
+
+#Region "       Перегрузки в которых текушщий объект это SQLContext и параметры анонимный объект "
+        <Extension>
+        Public Function ExecReader(Connection As SQLContext, SqlText As String, Parameters As Object) As IDataReader
+            Return ExecReader(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+
+        <Extension>
+        Public Function ExecNonQuery(Connection As SQLContext, SqlText As String, Parameters As Object) As Integer
+            Return ExecNonQuery(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Connection As SQLContext, SqlText As String, Parameters As Object) As Object
+            Return ExecScalar(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Of TResult)(Connection As SQLContext, SqlText As String, Parameters As Object) As TResult
+            Return ExecScalar(Of TResult)(Connection.OpenConnection(), SqlText, ContextParameters.FromObject(Parameters))
+        End Function
+#End Region
 
     End Module
 

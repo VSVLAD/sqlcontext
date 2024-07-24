@@ -99,12 +99,6 @@ Public Class ContextMappers
                             ElseIf TypeOf xAttribute Is PrimaryKeyAttribute Then
                                 columnInfo.PrimaryKey = True
 
-                            ElseIf TypeOf xAttribute Is AutoIncrementAttribute Then
-                                columnInfo.AutoIncrement = True
-
-                            ElseIf TypeOf xAttribute Is ProgrammableAttribute Then
-                                columnInfo.Programmable = True
-
                             End If
                         Next
 

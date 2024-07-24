@@ -10,6 +10,7 @@
     <Company>VS PROJECT</Company>
     <Authors>Vladilen Kruglov</Authors>
     <Copyright>Vladilen Kruglov</Copyright>
+    <Description>SQLContext it is microORM for easy mapping your sql queries to VB and C# classes. The library has some special features that provide the flexibility to configure the mapping</Description>
     <PackageIcon>db.png</PackageIcon>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
