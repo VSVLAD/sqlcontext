@@ -11,9 +11,9 @@ Public Class SQLContext
     Private dbconnection As IDbConnection
 
     ''' <summary>
-    ''' Настройки по-умолчанию для инстанса класса
+    ''' Ссылка на хранилище пользовательских мапперов
     ''' </summary>
-    Public ReadOnly Property Configuration As New SQLContextConfiguration
+    Public Shared ReadOnly Property UserMappers As UserMappers = UserMappers.Instance
 
     ''' <summary>
     ''' Конструктор принимает объект соединения
@@ -33,7 +33,7 @@ Public Class SQLContext
     End Sub
 
     ''' <summary>Возвращает используемое соединение</summary>
-    Friend Function OpenConnection() As IDbConnection
+    Public Function OpenConnection() As IDbConnection
         If dbconnection.State = ConnectionState.Closed Then dbconnection.Open()
         Return dbconnection
     End Function
@@ -42,7 +42,7 @@ Public Class SQLContext
     ''' <typeparam name="T">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
     ''' <param name="SqlText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRows(Of T)(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of T)
+    Public Iterator Function SelectRows(Of T)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of T)
         Try
             ' Проверяем, если для указаного типа пользовательский маппер
             Dim userMapper = UserMappers.Instance.GetMapper(Of T)()
@@ -68,7 +68,6 @@ Public Class SQLContext
         End Try
     End Function
 
-
     ''' <summary>
     ''' Выборка строк с использованием конкретного пользовательского маппера
     ''' </summary>
@@ -76,7 +75,7 @@ Public Class SQLContext
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
-            Using dbcmd As IDbCommand = ContextParameters.FromParametersToCommand(dbconnection, SqlText, Parameters)
+            Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
                 Using dbreader = dbcmd.ExecuteReader()
                     Do While dbreader.Read()
                         Yield Mapper(dbreader)
@@ -90,11 +89,20 @@ Public Class SQLContext
         End Try
     End Function
 
-    Public Iterator Function SelectRowsFast(Of TClass)(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of TClass)
+    ''' <summary>
+    ''' Выборка строк с использованием конкретного пользовательского маппера
+    ''' </summary>
+    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
+        For Each row In SelectRows(SqlText, Nothing, Mapper)
+            Yield row
+        Next
+    End Function
+
+    Public Iterator Function SelectRowsFast(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
-            Using dbcmd As IDbCommand = ContextParameters.FromParametersToCommand(dbconnection, SqlText, Parameters)
+            Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
                 Using dbreader = dbcmd.ExecuteReader()
 
                     ' Получаем ссылку на скомпилированный маппер
@@ -116,10 +124,10 @@ Public Class SQLContext
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк в виде Dictionary(Of String, Object)</summary>
     ''' <param name="SQLText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRows(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of Dictionary(Of String, Object))
+    Public Iterator Function SelectRows(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of Dictionary(Of String, Object))
         Dim dbconnection As IDbConnection = OpenConnection()
 
-        Using dbcmd As IDbCommand = ContextParameters.FromParametersToCommand(dbconnection, SqlText, Parameters)
+        Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
             Using dbreader = dbcmd.ExecuteReader()
 
                 ' Массив с названиями столбцов
@@ -162,15 +170,15 @@ Public Class SQLContext
     End Function
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк в виде Dictionary(Of String, Object)</summary>
-    Public Iterator Function SelectRows(SqlText As String, Parameters As Object) As IEnumerable(Of Dictionary(Of String, Object))
-        For Each row In SelectRows(SqlText, ContextParameters.FromParametersToDictionary(Parameters))
+    Public Iterator Function SelectRows(Of TAnonymousObject)(SqlText As String, Parameters As TAnonymousObject) As IEnumerable(Of Dictionary(Of String, Object))
+        For Each row In SelectRows(SqlText, ContextParameters.FromObject(Parameters))
             Yield row
         Next
     End Function
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на класс DynamicRow, производный от DynamicObject</summary>
     ''' <param name="SqlText">Текст запроса SQL</param>
-    Public Iterator Function SelectRowsDynamic(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of Object)
+    Public Iterator Function SelectRowsDynamic(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of Object)
         Try
             For Each row In SelectRows(SqlText, Parameters)
                 Yield ContextMappers.FromDictionaryToDynamic(row)
@@ -184,8 +192,8 @@ Public Class SQLContext
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на класс DynamicRow, производный от DynamicObject</summary>
     ''' <param name="SqlText">Текст запроса SQL</param>
-    Public Iterator Function SelectRowsDynamic(SqlText As String, Parameters As Object) As IEnumerable(Of Object)
-        For Each row In SelectRowsDynamic(SqlText, ContextParameters.FromParametersToDictionary(Parameters))
+    Public Iterator Function SelectRowsDynamic(Of TAnonymousObject)(SqlText As String, Parameters As TAnonymousObject) As IEnumerable(Of Object)
+        For Each row In SelectRowsDynamic(SqlText, ContextParameters.FromObject(Parameters))
             Yield row
         Next
     End Function

@@ -67,28 +67,4 @@ Module PgTest
         'Console.ReadKey()
     End Sub
 
-    <Table("test")>
-    Public Class ClassTest
-
-        <Column("id"), PrimaryKey>
-        Public Property ID As Short
-
-        <Column("name")>
-        Public Property Name As String
-
-        <Column("ondate")>
-        Public Property OnDateValue As Date?
-
-        <Programmable>
-        Public Property Address As String
-
-        <Programmable>
-        Public Property Phone As Long?
-
-        <Programmable>
-        Public Property Skype As Long?
-
-    End Class
-
-
 End Module
