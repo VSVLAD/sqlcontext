@@ -18,7 +18,7 @@ Public Class UserMappers
     ''' <summary>
     ''' Ссылка на объект управления пользовательскими мапперами
     ''' </summary>
-    Public Shared ReadOnly Property Instance As UserMappers
+    Friend Shared ReadOnly Property Instance As UserMappers
         Get
             If self Is Nothing Then
                 SyncLock locker
@@ -32,12 +32,12 @@ Public Class UserMappers
         End Get
     End Property
 
-    Public Sub Register(Of T)(Mapper As Func(Of IDataRecord, T))
+    Public Sub RegisterMapper(Of T)(Mapper As Func(Of IDataRecord, T))
         Dim type = GetType(T)
         userMapperCache.AddOrUpdate(type, Mapper, Function(key, oldValue) Mapper)
     End Sub
 
-    Public Sub Unregister(Of T)()
+    Public Sub UnregisterMapper(Of T)()
         Dim type = GetType(T)
         Dim value As [Delegate] = Nothing
         userMapperCache.TryRemove(type, value)
@@ -54,7 +54,7 @@ Public Class UserMappers
         End If
     End Function
 
-    Public Sub RemoveAll()
+    Public Sub ClearAll()
         userMapperCache.Clear()
     End Sub
 

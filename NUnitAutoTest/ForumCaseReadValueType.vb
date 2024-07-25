@@ -84,7 +84,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectValueTypeMapperUser()
             Try
-                SQLContext.UserMappers.Register(Function(reader)
+                SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                     Dim value = reader.GetInt64(0)
                                                     Return value
                                                 End Function)
@@ -94,7 +94,7 @@ Namespace NUnitAutoTest
                     ClassicAssert.AreEqual(22, row)
                 End Using
 
-                SQLContext.UserMappers.Unregister(Of Long)()
+                SQLContext.UserMappers.UnregisterMapper(Of Long)()
 
             Catch ex As Exception
                 Assert.Fail(ex.Message)

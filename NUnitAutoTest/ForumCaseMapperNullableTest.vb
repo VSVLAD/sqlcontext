@@ -44,7 +44,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectNullFieldMapperUser()
             Try
-                SQLContext.UserMappers.Register(Function(reader)
+                SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                     Return New Topic With {
                                                             .TopicName = If(reader("topic_name").Equals(DBNull.Value), Nothing, reader("topic_name")),
                                                             .Id = If(reader("id").Equals(DBNull.Value), Nothing, reader("id")),
@@ -58,7 +58,7 @@ Namespace NUnitAutoTest
                     ClassicAssert.AreEqual(Nothing, row.UserId)
                 End Using
 
-                SQLContext.UserMappers.Unregister(Of Topic)()
+                SQLContext.UserMappers.UnregisterMapper(Of Topic)()
 
             Catch ex As Exception
                 Assert.Fail(ex.Message)

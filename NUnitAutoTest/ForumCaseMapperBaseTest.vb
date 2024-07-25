@@ -110,7 +110,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperUserNoParams()
             Try
-                SQLContext.UserMappers.Register(Function(reader)
+                SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                     Return New Topic With {
                                                             .TopicName = reader("topic_name"),
                                                             .Id = reader("id"),
@@ -124,7 +124,7 @@ Namespace NUnitAutoTest
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
-                SQLContext.UserMappers.Unregister(Of Topic)()
+                SQLContext.UserMappers.UnregisterMapper(Of Topic)()
 
             Catch ex As Exception
                 Assert.Fail(ex.Message)
@@ -135,7 +135,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperUserIntParamAnon()
             Try
-                SQLContext.UserMappers.Register(Function(reader)
+                SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                     Return New Topic With {
                                                             .TopicName = reader("topic_name"),
                                                             .Id = reader("id"),
@@ -151,7 +151,7 @@ Namespace NUnitAutoTest
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
-                SQLContext.UserMappers.Unregister(Of Topic)()
+                SQLContext.UserMappers.UnregisterMapper(Of Topic)()
 
             Catch ex As Exception
                 Assert.Fail(ex.Message)
@@ -162,7 +162,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperUserIntParamDict()
             Try
-                SQLContext.UserMappers.Register(Function(reader)
+                SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                     Return New Topic With {
                                                             .TopicName = reader("topic_name"),
                                                             .Id = reader("id"),
@@ -177,7 +177,7 @@ Namespace NUnitAutoTest
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
-                SQLContext.UserMappers.Unregister(Of Topic)()
+                SQLContext.UserMappers.UnregisterMapper(Of Topic)()
 
             Catch ex As Exception
                 Assert.Fail(ex.Message)

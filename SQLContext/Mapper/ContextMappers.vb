@@ -73,7 +73,7 @@ Public Class ContextMappers
                                      Dim parameter = Expression.Parameter(GetType(IDataRecord), "reader")
 
                                      ' Маппинг в зависимости от простого или составного типа
-                                     If IsPrimitiveType(Of TClass)() OrElse IsBaseObjectType(Of TClass)() Then
+                                     If IsPrimitiveType(typeClass) OrElse IsBaseObjectType(typeClass) Then
 
                                          ' Для простых типов всегда читаем колонку с индексом 0
                                          Dim getValueMethod = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
@@ -82,7 +82,7 @@ Public Class ContextMappers
                                          Dim returnExp As Expression
 
                                          ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
-                                         If IsNullableType(Of TClass)() Then
+                                         If IsNullableType(typeClass) Then
                                              Dim defaultValue = Expression.Default(typeClass)
                                              Dim checkDBNull = Expression.Call(getValueCall, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
                                              Dim convertValue = Expression.Condition(
@@ -151,22 +151,10 @@ Public Class ContextMappers
     End Function
 
     ''' <summary>Преобразует строку данных в объект пользовательского типа</summary>
-    Protected Friend Shared Function FromDictionaryToType(Of T)(row As Dictionary(Of String, Object)) As T
+    Friend Shared Function FromDictionaryToType(Of T)(row As Dictionary(Of String, Object)) As T
         Dim typeClass = GetType(T)
 
-        If IsArrayType(Of T)() Then  ' Если тип является массивом
-            Dim resultArray(row.Count - 1) As Object
-            Dim ind As Integer
-
-            For Each item In row.Values
-                resultArray(ind) = item
-                ind += 1
-            Next
-
-            ' TODO CHECK!
-            Return CType(CType(resultArray, Object), T)
-
-        ElseIf IsPrimitiveType(Of T)() OrElse IsBaseObjectType(Of T)() Then ' Если простой значимый тип или скаляр в Object
+        If IsPrimitiveType(typeClass) OrElse IsBaseObjectType(typeClass) Then ' Если простой значимый тип или скаляр в Object
             Return CType(row.Values.FirstOrDefault(), T)
 
         ElseIf typeClass.IsClass Then ' Если тип является классом
@@ -199,48 +187,41 @@ Public Class ContextMappers
     End Function
 
     ''' <summary>Преобразует строку данных в объект DynamicObject</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function FromDictionaryToDynamic(row As Dictionary(Of String, Object)) As DynamicRow
+    Friend Shared Function FromDictionaryToDynamic(row As Dictionary(Of String, Object)) As DynamicRow
         Return New DynamicRow(row)
     End Function
 
-    ''' <summary>Проверяет, является ли переданный тип массив как Object</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function IsArrayType(Of T)() As Boolean
-        Dim type = GetType(T)
-        Return type.IsArray AndAlso type.GetElementType() Is GetType(Object)
-    End Function
-
     ''' <summary>Проверяет, является ли переданный объект базовым Object</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function IsBaseObjectType(Of T)() As Boolean
-        Dim type = GetType(T)
-        Return TypeOf type Is Object AndAlso type.BaseType Is Nothing
+    Friend Shared Function IsBaseObjectType(variable As Type) As Boolean
+        Return TypeOf variable Is Object AndAlso variable.BaseType Is Nothing
     End Function
 
     ''' <summary>Проверяет, является ли переданный тип простым значимым</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function IsPrimitiveType(Of T)() As Boolean
-        Dim type = GetType(T)
-        Return type.IsPrimitive OrElse type.IsValueType OrElse type Is GetType(String)
+    Friend Shared Function IsPrimitiveType(variable As Type) As Boolean
+        Return variable.IsPrimitive OrElse variable.IsValueType OrElse variable Is GetType(String)
     End Function
 
     ''' <summary>Метод возвращает значимый тип по свойству, извлекая информацию из Nullable типа</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function ValueTypeFrom(variable As Type) As Type
+    Friend Shared Function ValueTypeFrom(variable As Type) As Type
         Return If(IsNullableType(variable), Nullable.GetUnderlyingType(variable), variable)
     End Function
 
     ''' <summary>Проверяет, является ли тип Nullable</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function IsNullableType(variable As Type) As Boolean
+    Friend Shared Function IsNullableType(variable As Type) As Boolean
         Return Nullable.GetUnderlyingType(variable) IsNot Nothing
     End Function
 
     ''' <summary>Проверяет, является ли тип Nullable</summary>
-    <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function IsNullableType(Of T)() As Boolean
+    Friend Shared Function IsNullableType(Of T)() As Boolean
         Return Nullable.GetUnderlyingType(GetType(T)) IsNot Nothing
     End Function
+
+    Public Sub ClearFastMapperCache()
+        compileMapperCache.Clear()
+    End Sub
+
+    Public Sub ClearInternalMapperCache()
+        tableInfoCache.Clear()
+    End Sub
 
 End Class

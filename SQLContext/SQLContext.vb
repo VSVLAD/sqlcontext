@@ -39,13 +39,13 @@ Public Class SQLContext
     End Function
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
-    ''' <typeparam name="T">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
+    ''' <typeparam name="TClass">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
     ''' <param name="SqlText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRows(Of T)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of T)
+    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
         Try
             For Each row In SelectRows(SqlText, Parameters)
-                Yield ContextMappers.FromDictionaryToType(Of T)(row)
+                Yield ContextMappers.FromDictionaryToType(Of TClass)(row)
             Next
 
         Catch ex As SQLContextException
@@ -58,20 +58,20 @@ Public Class SQLContext
     End Function
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
-    ''' <typeparam name="T">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
+    ''' <typeparam name="TClass">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
     ''' <param name="SqlText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRowsMapper(Of T)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of T)
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
         Try
             ' Проверяем, если для указаного типа пользовательский маппер
-            Dim userMapper = UserMappers.Instance.GetMapper(Of T)()
+            Dim userMapper = UserMappers.Instance.GetMapper(Of TClass)()
 
             If userMapper IsNot Nothing Then
                 For Each row In SelectRowsMapper(SqlText, Parameters, userMapper)
                     Yield row
                 Next
             Else
-                Throw New SQLContextException(String.Format(Resources.ExceptionMessages.NOT_FOUND_USER_MAPPER, GetType(T).ToString()))
+                Throw New SQLContextException(String.Format(Resources.ExceptionMessages.NOT_FOUND_USER_MAPPER, GetType(TClass).ToString()))
             End If
 
         Catch ex As SQLContextException
