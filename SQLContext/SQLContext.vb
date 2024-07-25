@@ -44,19 +44,34 @@ Public Class SQLContext
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
     Public Iterator Function SelectRows(Of T)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of T)
         Try
+            For Each row In SelectRows(SqlText, Parameters)
+                Yield ContextMappers.FromDictionaryToType(Of T)(row)
+            Next
+
+        Catch ex As SQLContextException
+            Throw ex
+
+        Catch ex As Exception
+            Throw New SQLContextException(ex.Message, ex)
+
+        End Try
+    End Function
+
+    ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
+    ''' <typeparam name="T">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
+    ''' <param name="SqlText">Текст запроса SQL</param>
+    ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
+    Public Iterator Function SelectRowsMapper(Of T)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of T)
+        Try
             ' Проверяем, если для указаного типа пользовательский маппер
             Dim userMapper = UserMappers.Instance.GetMapper(Of T)()
 
             If userMapper IsNot Nothing Then
-                ' Вызываем версию метода с указанием конкретного маппера полученого из хранилища мапперов
-                For Each row In SelectRows(SqlText, Parameters, userMapper)
+                For Each row In SelectRowsMapper(SqlText, Parameters, userMapper)
                     Yield row
                 Next
             Else
-                ' Иначе выбираем предустановленный "классический" маппер использующий словарь
-                For Each row In SelectRows(SqlText, Parameters)
-                    Yield ContextMappers.FromDictionaryToType(Of T)(row)
-                Next
+                Throw New SQLContextException(String.Format(Resources.ExceptionMessages.NOT_FOUND_USER_MAPPER, GetType(T).ToString()))
             End If
 
         Catch ex As SQLContextException
@@ -71,7 +86,7 @@ Public Class SQLContext
     ''' <summary>
     ''' Выборка строк с использованием конкретного пользовательского маппера
     ''' </summary>
-    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Parameters As Dictionary(Of String, Object), Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Parameters As Dictionary(Of String, Object), Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
@@ -93,7 +108,7 @@ Public Class SQLContext
     ''' Выборка строк с использованием конкретного пользовательского маппера
     ''' </summary>
     Public Iterator Function SelectRows(Of TClass)(SqlText As String, Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
-        For Each row In SelectRows(SqlText, Nothing, Mapper)
+        For Each row In SelectRowsMapper(SqlText, Nothing, Mapper)
             Yield row
         Next
     End Function

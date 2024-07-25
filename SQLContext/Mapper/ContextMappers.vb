@@ -1,9 +1,11 @@
 ﻿Option Explicit On
 Option Strict On
 
+Imports System.Data.Common
 Imports System.Linq.Expressions
 Imports System.Reflection
 Imports System.Runtime.CompilerServices
+Imports System.Runtime.InteropServices.ComTypes
 Imports VSProject.SQLContext.Attributes
 
 Public Class ContextMappers
@@ -18,59 +20,8 @@ Public Class ContextMappers
     ''' </summary>
     Private Shared compileMapperCache As New MemoryCache(Of Type, [Delegate])
 
-    ' Функция для создания делегата маппинга данных из IDataRecord в TClass
-    Friend Shared Function FromReaderToExpressionTreeMapper(Of TClass)(reader As IDataRecord) As Func(Of IDataRecord, TClass)
-        Dim funcMapper = compileMapperCache.Fetch(GetType(TClass),
-                                 Function(typeClass)
-
-                                     Dim tableInfo = FromClassToTableInfo(Of TClass)()
-                                     Dim props = typeClass.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
-                                     Dim parameter = Expression.Parameter(GetType(IDataRecord), "reader")
-
-                                     Dim bindings As New List(Of MemberBinding)
-
-                                     For Each columnInfo In tableInfo.Columns
-                                         Dim prop = props.FirstOrDefault(Function(p) p.Name.Equals(columnInfo.PropertyName, StringComparison.InvariantCultureIgnoreCase))
-
-                                         If prop IsNot Nothing Then
-                                             Dim getValueMethod = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
-                                             Dim columnIndex = Expression.Constant(reader.GetOrdinal(columnInfo.ColumnName), GetType(Integer))
-                                             Dim getValueCall = Expression.Call(parameter, getValueMethod, columnIndex)
-
-                                             ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
-                                             If IsNullableType(columnInfo.PropertyType) Then
-                                                 Dim defaultValue = Expression.Default(columnInfo.PropertyType)
-
-                                                 Dim checkDBNull = Expression.Call(getValueCall, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
-                                                 Dim convertValue = Expression.Condition(
-                                                        checkDBNull,
-                                                        defaultValue,
-                                                        Expression.Convert(getValueCall, columnInfo.PropertyType)
-                                                    )
-
-                                                 Dim memberAssignment = Expression.Bind(prop, convertValue)
-
-                                                 bindings.Add(memberAssignment)
-                                             Else
-                                                 Dim convertValue = Expression.Convert(getValueCall, columnInfo.PropertyType)
-                                                 Dim memberAssignment = Expression.Bind(prop, convertValue)
-
-                                                 bindings.Add(memberAssignment)
-                                             End If
-                                         End If
-                                     Next
-
-                                     Dim memberInit = Expression.MemberInit(Expression.[New](typeClass), bindings)
-                                     Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(memberInit, parameter)
-                                     Dim func = lambda.Compile()
-
-                                     Return func
-                                 End Function)
-        Return CType(funcMapper, Func(Of IDataRecord, TClass))
-    End Function
-
     ''' <summary>Преобразует метаинформацию класса в объект данных о таблице и столбцах</summary>
-    Friend Shared Function FromClassToTableInfo(Of TClass)() As TableInformation
+    Friend Shared Function FromTypeToTableInfo(Of TClass)() As TableInformation
         Return tableInfoCache.Fetch(GetType(TClass),
                 Function(type)
                     Dim tableInfo As New TableInformation()
@@ -114,14 +65,96 @@ Public Class ContextMappers
                 End Function)
     End Function
 
+    ' Функция для создания делегата маппинга данных из IDataRecord в TClass
+    Friend Shared Function FromReaderToExpressionTreeMapper(Of TClass)(reader As IDataRecord) As Func(Of IDataRecord, TClass)
+        Dim funcMapper = compileMapperCache.Fetch(GetType(TClass),
+                                 Function(typeClass)
+                                     Dim tableInfo = FromTypeToTableInfo(Of TClass)()
+                                     Dim parameter = Expression.Parameter(GetType(IDataRecord), "reader")
+
+                                     ' Маппинг в зависимости от простого или составного типа
+                                     If IsPrimitiveType(Of TClass)() OrElse IsBaseObjectType(Of TClass)() Then
+
+                                         ' Для простых типов всегда читаем колонку с индексом 0
+                                         Dim getValueMethod = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
+                                         Dim columnIndex = Expression.Constant(0, GetType(Integer))
+                                         Dim getValueCall = Expression.Call(parameter, getValueMethod, columnIndex)
+                                         Dim returnExp As Expression
+
+                                         ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
+                                         If IsNullableType(Of TClass)() Then
+                                             Dim defaultValue = Expression.Default(typeClass)
+                                             Dim checkDBNull = Expression.Call(getValueCall, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
+                                             Dim convertValue = Expression.Condition(
+                                                checkDBNull,
+                                                defaultValue,
+                                                Expression.Convert(getValueCall, typeClass)
+                                            )
+
+                                             returnExp = convertValue
+                                         Else
+                                             Dim convertValue = Expression.Convert(getValueCall, typeClass)
+                                             returnExp = convertValue
+                                         End If
+
+                                         Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(returnExp, parameter)
+                                         Return lambda.Compile()
+
+                                     Else
+                                         Dim props = typeClass.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
+                                         Dim bindings As New List(Of MemberBinding)
+
+                                         ' Для составных типов используем мету для маппинга
+                                         For Each columnInfo In tableInfo.Columns
+                                             Dim prop = props.FirstOrDefault(Function(p) p.Name.Equals(columnInfo.PropertyName, StringComparison.InvariantCultureIgnoreCase))
+
+                                             If prop IsNot Nothing Then
+                                                 Dim getValueMethod = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
+                                                 Dim columnOrdinal = reader.GetOrdinal(columnInfo.ColumnName)
+
+                                                 ' Если в DataReader не столбца с таким названием, то это пользовательское свойство, пропускаем
+                                                 If columnOrdinal = -1 Then Continue For
+
+                                                 Dim columnIndex = Expression.Constant(columnOrdinal, GetType(Integer))
+                                                 Dim getValueCall = Expression.Call(parameter, getValueMethod, columnIndex)
+
+                                                 ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
+                                                 If IsNullableType(columnInfo.PropertyType) OrElse columnInfo.PropertyType Is GetType(String) Then
+                                                     Dim defaultValue = Expression.Default(columnInfo.PropertyType)
+
+                                                     Dim checkDBNull = Expression.Call(getValueCall, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
+                                                     Dim convertValue = Expression.Condition(
+                                                        checkDBNull,
+                                                        defaultValue,
+                                                        Expression.Convert(getValueCall, columnInfo.PropertyType)
+                                                    )
+
+                                                     Dim memberAssignment = Expression.Bind(prop, convertValue)
+                                                     bindings.Add(memberAssignment)
+                                                 Else
+                                                     Dim convertValue = Expression.Convert(getValueCall, columnInfo.PropertyType)
+                                                     Dim memberAssignment = Expression.Bind(prop, convertValue)
+
+                                                     bindings.Add(memberAssignment)
+                                                 End If
+                                             End If
+                                         Next
+
+                                         ' Создаём экземпляр составного типа
+                                         Dim memberInit = Expression.MemberInit(Expression.[New](typeClass), bindings)
+                                         Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(memberInit, parameter)
+
+                                         Return lambda.Compile()
+                                     End If
+                                 End Function)
+        Return CType(funcMapper, Func(Of IDataRecord, TClass))
+    End Function
 
     ''' <summary>Преобразует строку данных в объект пользовательского типа</summary>
     Protected Friend Shared Function FromDictionaryToType(Of T)(row As Dictionary(Of String, Object)) As T
         Dim typeClass = GetType(T)
 
-        ' Если T является массивом
-        If typeClass.IsArray AndAlso typeClass.GetElementType() Is GetType(Object) Then
-
+        If IsArrayType(Of T)() Then  ' Если тип является массивом
             Dim resultArray(row.Count - 1) As Object
             Dim ind As Integer
 
@@ -133,23 +166,17 @@ Public Class ContextMappers
             ' TODO CHECK!
             Return CType(CType(resultArray, Object), T)
 
-            ' Если простой значимый тип
-        ElseIf typeClass.IsPrimitive OrElse typeClass.IsValueType OrElse typeClass Is GetType(String) Then
-            If IsNullableType(typeClass) Then
-                Throw New NotImplementedException(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_NULLABLE)
-            Else
-                Return CType(row.Values.FirstOrDefault(), T)
-            End If
+        ElseIf IsPrimitiveType(Of T)() OrElse IsBaseObjectType(Of T)() Then ' Если простой значимый тип или скаляр в Object
+            Return CType(row.Values.FirstOrDefault(), T)
 
-            ' Если TClass является классом
-        ElseIf typeClass.IsClass Then
+        ElseIf typeClass.IsClass Then ' Если тип является классом
 
-            ' Читаем мету из кеша или обновляем его
-            Dim tableInfo = FromClassToTableInfo(Of T)()
+            ' Читаем мету из кеша или ищем её, если тип не знаком
+            Dim tableInfo = FromTypeToTableInfo(Of T)()
 
             'Маппим столбцы на свойства
             Dim props = typeClass.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
-            Dim resultObject As T = Activator.CreateInstance(Of T)
+            Dim retObj As T = Activator.CreateInstance(Of T)
 
             For Each kvData In row
 
@@ -160,13 +187,13 @@ Public Class ContextMappers
                 If prop Is Nothing Then Continue For
 
                 ' Записываем в свойство значение
-                prop.SetValue(resultObject, kvData.Value, Nothing)
+                prop.SetValue(retObj, kvData.Value, Nothing)
             Next
 
-            Return resultObject
+            Return retObj
         End If
 
-        ' В остальных случаях, когда тип T не поддерживается
+        ' В остальных случаях, когда маппинг на тип не поддерживается
         Throw New NotImplementedException(String.Format(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_TYPE, typeClass.ToString()))
 
     End Function
@@ -177,14 +204,25 @@ Public Class ContextMappers
         Return New DynamicRow(row)
     End Function
 
-    ''' <summary>Метод читает указанное свойство из класса</summary>
-    ''' <typeparam name="T">Тип пользовательского класса</typeparam>
-    ''' <param name="ClassObject">Объект пользовательского класса</param>
-    ''' <param name="PropertyName">Имя свойства</param>
-    ''' <returns>Значение свойства</returns>
+    ''' <summary>Проверяет, является ли переданный тип массив как Object</summary>
     <MethodImpl(MethodImplOptions.AggressiveInlining)>
-    Protected Friend Shared Function GetProperyValue(Of T)(ClassObject As T, PropertyName As String) As Object
-        Return GetType(T).GetProperty(PropertyName).GetValue(ClassObject)
+    Protected Friend Shared Function IsArrayType(Of T)() As Boolean
+        Dim type = GetType(T)
+        Return type.IsArray AndAlso type.GetElementType() Is GetType(Object)
+    End Function
+
+    ''' <summary>Проверяет, является ли переданный объект базовым Object</summary>
+    <MethodImpl(MethodImplOptions.AggressiveInlining)>
+    Protected Friend Shared Function IsBaseObjectType(Of T)() As Boolean
+        Dim type = GetType(T)
+        Return TypeOf type Is Object AndAlso type.BaseType Is Nothing
+    End Function
+
+    ''' <summary>Проверяет, является ли переданный тип простым значимым</summary>
+    <MethodImpl(MethodImplOptions.AggressiveInlining)>
+    Protected Friend Shared Function IsPrimitiveType(Of T)() As Boolean
+        Dim type = GetType(T)
+        Return type.IsPrimitive OrElse type.IsValueType OrElse type Is GetType(String)
     End Function
 
     ''' <summary>Метод возвращает значимый тип по свойству, извлекая информацию из Nullable типа</summary>
@@ -193,10 +231,16 @@ Public Class ContextMappers
         Return If(IsNullableType(variable), Nullable.GetUnderlyingType(variable), variable)
     End Function
 
-    ''' <summary>Метод проверяет, имеет ли свойство тип Nullable</summary>
+    ''' <summary>Проверяет, является ли тип Nullable</summary>
     <MethodImpl(MethodImplOptions.AggressiveInlining)>
     Protected Friend Shared Function IsNullableType(variable As Type) As Boolean
         Return Nullable.GetUnderlyingType(variable) IsNot Nothing
+    End Function
+
+    ''' <summary>Проверяет, является ли тип Nullable</summary>
+    <MethodImpl(MethodImplOptions.AggressiveInlining)>
+    Protected Friend Shared Function IsNullableType(Of T)() As Boolean
+        Return Nullable.GetUnderlyingType(GetType(T)) IsNot Nothing
     End Function
 
 End Class

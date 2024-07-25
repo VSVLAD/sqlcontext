@@ -65,15 +65,6 @@ Namespace Resources
         End Property
         
         '''<summary>
-        '''  Ищет локализованную строку, похожую на Not found serialization rule for value type {0} from {1} to {2}.
-        '''</summary>
-        Friend Shared ReadOnly Property COLUMN_NOT_SERIALIZABLE() As String
-            Get
-                Return ResourceManager.GetString("COLUMN_NOT_SERIALIZABLE", resourceCulture)
-            End Get
-        End Property
-        
-        '''<summary>
         '''  Ищет локализованную строку, похожую на Connection object must be created before using in SQLContext.
         '''</summary>
         Friend Shared ReadOnly Property CONNECTION_MUST_BE_CREATED() As String
@@ -92,11 +83,11 @@ Namespace Resources
         End Property
         
         '''<summary>
-        '''  Ищет локализованную строку, похожую на Not implemented with Nullable types.
+        '''  Ищет локализованную строку, похожую на Not found user mapper for type {0}.
         '''</summary>
-        Friend Shared ReadOnly Property NOT_IMPLEMENTED_WITH_NULLABLE() As String
+        Friend Shared ReadOnly Property NOT_FOUND_USER_MAPPER() As String
             Get
-                Return ResourceManager.GetString("NOT_IMPLEMENTED_WITH_NULLABLE", resourceCulture)
+                Return ResourceManager.GetString("NOT_FOUND_USER_MAPPER", resourceCulture)
             End Get
         End Property
         
@@ -106,37 +97,6 @@ Namespace Resources
         Friend Shared ReadOnly Property NOT_IMPLEMENTED_WITH_TYPE() As String
             Get
                 Return ResourceManager.GetString("NOT_IMPLEMENTED_WITH_TYPE", resourceCulture)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Ищет локализованную строку, похожую на Values passed for parameterized query, but parameter names not recognized!
-        '''Named parameters must use the prefixes and suffixes. @param_name_s or :param_name_s are supported.
-        '''
-        '''Suffixes: S - string, R - fractional number, I - integer, D - datetime. Knowing the suffix, the class correctly declares the parameter type.
-        '''Examples: @USER_NAME_S, :USER_ID_I, :DATE_OF_CHANGE_D&quot;.
-        '''</summary>
-        Friend Shared ReadOnly Property PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES() As String
-            Get
-                Return ResourceManager.GetString("PARAMETERS_NAMES_MUST_USE_IF_PASSED_VALUES", resourceCulture)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Ищет локализованную строку, похожую на The cached command is not initialized. Check that command object are not deleted by user code throw Null assignment or Dispose method.
-        '''</summary>
-        Friend Shared ReadOnly Property PREPARED_QUERY_CACHED_COMMAND_IS_NULL() As String
-            Get
-                Return ResourceManager.GetString("PREPARED_QUERY_CACHED_COMMAND_IS_NULL", resourceCulture)
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  Ищет локализованную строку, похожую на Parameter {0} passed in parameter dictionary was not found in SQL query.
-        '''</summary>
-        Friend Shared ReadOnly Property PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY() As String
-            Get
-                Return ResourceManager.GetString("PREPARED_QUERY_DICT_PARAM_IS_MISSING_IN_QUERY", resourceCulture)
             End Get
         End Property
     End Class

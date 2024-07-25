@@ -106,13 +106,20 @@ Public Class Topic
     Public Property Id As Long
 
     <Column("forum_id")>
-    Public Property ForumId As Long
+    Public Property ForumId As Long?
+
+    <Column("user_name")>
+    Public Property UserName As String
 
     <Column("user_id")>
-    Public Property UserId As Long
+    Public Property UserId As Long?
 
     <Column("topic_name")>
     Public Property TopicName As String
+
+    Public Property CustomString As String = "X"
+
+    Public Property CustomBoolean As Boolean = True
 
 End Class
 

@@ -105,7 +105,6 @@ Namespace NUnitAutoTest
             End Try
         End Sub
 
-
         ' #################               Маппер пользовательский 
 
         <Test>
@@ -121,7 +120,7 @@ Namespace NUnitAutoTest
                                                 End Function)
 
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
-                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = 27").FirstOrDefault()
+                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = 27").FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -148,7 +147,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -174,7 +173,7 @@ Namespace NUnitAutoTest
 
                 Using context As New SQLContext(New SQLiteConnection(ConnectionString))
                     Dim params As New Dictionary(Of String, Object) From {{"ID", "27"}}
-                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", params).FirstOrDefault()
+                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", params).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -232,7 +231,6 @@ Namespace NUnitAutoTest
 
             End Try
         End Sub
-
 
         ' #################               Маппер основанный на Dynamic
 
