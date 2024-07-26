@@ -1,11 +1,7 @@
 ﻿Option Explicit On
 Option Strict On
-
-Imports System.Data.Common
 Imports System.Linq.Expressions
 Imports System.Reflection
-Imports System.Runtime.CompilerServices
-Imports System.Runtime.InteropServices.ComTypes
 Imports VSProject.SQLContext.Attributes
 
 Public Class ContextMappers
@@ -74,27 +70,46 @@ Public Class ContextMappers
 
                                      ' Маппинг в зависимости от простого или составного типа
                                      If IsPrimitiveType(typeClass) OrElse IsBaseObjectType(typeClass) Then
+                                         Dim returnExp As Expression
 
                                          ' Для простых типов всегда читаем колонку с индексом 0
-                                         Dim getValueMethod = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
-                                         Dim columnIndex = Expression.Constant(0, GetType(Integer))
-                                         Dim getValueCall = Expression.Call(parameter, getValueMethod, columnIndex)
-                                         Dim returnExp As Expression
+                                         Dim methodGetValue = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
+                                         Dim constOrdinalZero = Expression.Constant(0, GetType(Integer))
+                                         Dim callGetValue = Expression.Call(parameter,
+                                                                            methodGetValue,
+                                                                            constOrdinalZero)
 
                                          ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
                                          If IsNullableType(typeClass) Then
-                                             Dim defaultValue = Expression.Default(typeClass)
-                                             Dim checkDBNull = Expression.Call(getValueCall, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
-                                             Dim convertValue = Expression.Condition(
-                                                checkDBNull,
-                                                defaultValue,
-                                                Expression.Convert(getValueCall, typeClass)
-                                            )
 
-                                             returnExp = convertValue
+                                             ' Создаём переменную под чтение скаляра и читаем в пременную типа Object
+                                             Dim varValue = Expression.Variable(GetType(Object), "value")
+                                             Dim varAssign = Expression.Assign(varValue, callGetValue)
+
+                                             ' Создаём список из последовательности операторов (добавляем присвоение в переменную)
+                                             Dim statementList As New List(Of Expression)
+                                             statementList.Add(varAssign)
+
+                                             ' Проверяем переменную с значением, если содержит DBNull, тогда возвращает default значение, иначе саму переменную
+                                             Dim defaultValue = Expression.Default(typeClass)
+                                             Dim callCheckDBNull = Expression.Call(varValue, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
+
+                                             ' Кастуем переменную к типу возвращаемого значения
+                                             Dim convertValue = Expression.Convert(varValue, typeClass)
+
+                                             Dim ifConvertedValue = Expression.Condition(
+                                                    callCheckDBNull,
+                                                    defaultValue,
+                                                    convertValue
+                                                )
+
+                                             ' Добавляем условие в последовательность и этот же оператор будет return
+                                             statementList.Add(ifConvertedValue)
+
+                                             ' Создаём готовый блок из операторов
+                                             returnExp = Expression.Block(New ParameterExpression() {varValue}, statementList)
                                          Else
-                                             Dim convertValue = Expression.Convert(getValueCall, typeClass)
-                                             returnExp = convertValue
+                                             returnExp = Expression.Convert(callGetValue, typeClass)
                                          End If
 
                                          Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(returnExp, parameter)
@@ -116,23 +131,23 @@ Public Class ContextMappers
                                                  If columnOrdinal = -1 Then Continue For
 
                                                  Dim columnIndex = Expression.Constant(columnOrdinal, GetType(Integer))
-                                                 Dim getValueCall = Expression.Call(parameter, getValueMethod, columnIndex)
+                                                 Dim methodGetValue = Expression.Call(parameter, getValueMethod, columnIndex)
 
                                                  ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
                                                  If IsNullableType(columnInfo.PropertyType) OrElse columnInfo.PropertyType Is GetType(String) Then
                                                      Dim defaultValue = Expression.Default(columnInfo.PropertyType)
 
-                                                     Dim checkDBNull = Expression.Call(getValueCall, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
+                                                     Dim callCheckDBNull = Expression.Call(methodGetValue, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
                                                      Dim convertValue = Expression.Condition(
-                                                        checkDBNull,
+                                                        callCheckDBNull,
                                                         defaultValue,
-                                                        Expression.Convert(getValueCall, columnInfo.PropertyType)
+                                                        Expression.Convert(methodGetValue, columnInfo.PropertyType)
                                                     )
 
                                                      Dim memberAssignment = Expression.Bind(prop, convertValue)
                                                      bindings.Add(memberAssignment)
                                                  Else
-                                                     Dim convertValue = Expression.Convert(getValueCall, columnInfo.PropertyType)
+                                                     Dim convertValue = Expression.Convert(methodGetValue, columnInfo.PropertyType)
                                                      Dim memberAssignment = Expression.Bind(prop, convertValue)
 
                                                      bindings.Add(memberAssignment)
