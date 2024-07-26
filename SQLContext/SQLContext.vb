@@ -64,10 +64,10 @@ Public Class SQLContext
     Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
         Try
             ' Проверяем, если для указаного типа пользовательский маппер
-            Dim userMapper = UserMappers.Instance.GetMapper(Of TClass)()
+            Dim mapper = UserMappers.Instance.GetMapper(Of TClass)()
 
-            If userMapper IsNot Nothing Then
-                For Each row In SelectRowsMapper(SqlText, Parameters, userMapper)
+            If mapper IsNot Nothing Then
+                For Each row In SelectRowsMapper(SqlText, Parameters, mapper)
                     Yield row
                 Next
             Else
@@ -143,11 +143,11 @@ Public Class SQLContext
         Dim dbconnection As IDbConnection = OpenConnection()
 
         Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
-            Using dbreader = dbcmd.ExecuteReader()
+            Using dbreader As IDataReader = dbcmd.ExecuteReader()
 
                 ' Массив с названиями столбцов
-                Dim fieldNames() As String
-                Dim fieldCached As Boolean
+                Dim fieldNames() As String = {}
+                Dim fieldCached As Boolean = False
 
                 Dim fieldBound = dbreader.FieldCount - 1
                 ReDim fieldNames(fieldBound)
@@ -171,7 +171,7 @@ Public Class SQLContext
                     Dim retDict As New Dictionary(Of String, Object)
 
                     For I = 0 To fieldBound
-                        If dbreader.IsDBNull(I) Then
+                        If fieldValues(I).Equals(DBNull.Value) Then
                             retDict.Add(fieldNames(I), Nothing)
                         Else
                             retDict.Add(fieldNames(I), fieldValues(I))

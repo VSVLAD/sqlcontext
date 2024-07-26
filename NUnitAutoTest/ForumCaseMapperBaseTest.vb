@@ -1,24 +1,26 @@
-Imports VSProject.SQLContext.Attributes
-Imports VSProject.SQLContext.Exceptions
-Imports VSProject.SQLContext.Extensions
 Imports VSProject.SQLContext
 Imports System.Data.SQLite
 Imports NUnit.Framework
 Imports NUnit.Framework.Legacy
+Imports System.Data
 
 Namespace NUnitAutoTest
 
     <TestFixture>
     Public Class ForumCaseMapperBaseTest
 
-        Private Shared ConnectionString As String = "Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"
+        Public Function InitConnection() As IDbConnection
+            Dim connection = SQLiteFactory.Instance.CreateConnection()
+            connection.ConnectionString = "Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"
+            Return connection
+        End Function
 
         ' #################               Маппер на словарь 
 
         <Test>
         Public Sub SelectOneTopicMapperDictionaryNoParams()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRows("select * from topic where id = 27").FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row("topic_name"))
                 End Using
@@ -32,7 +34,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperDictionaryIntParamAnon()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRows("select * from topic where id = @ID", New With {.ID = 27}).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row("topic_name"))
                 End Using
@@ -46,7 +48,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperDictionaryIntParamDict()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim params As New Dictionary(Of String, Object) From {{"ID", "27"}}
                     Dim row = context.SelectRows("select * from topic where id = @ID", params).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row("topic_name"))
@@ -63,7 +65,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperInternalNoParams()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRows(Of Topic)("select * from topic where id = 27").FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
@@ -77,7 +79,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperInternalIntParamAnon()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
                     Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
@@ -93,7 +95,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperInternalIntParamDict()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim params As New Dictionary(Of String, Object) From {{"ID", "27"}}
                     Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", params).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
@@ -111,15 +113,15 @@ Namespace NUnitAutoTest
         Public Sub SelectOneTopicMapperUserNoParams()
             Try
                 SQLContext.UserMappers.RegisterMapper(Function(reader)
-                                                    Return New Topic With {
-                                                            .TopicName = reader("topic_name"),
-                                                            .Id = reader("id"),
-                                                            .ForumId = reader("forum_id"),
-                                                            .UserId = reader("user_id")
-                                                        }
-                                                End Function)
+                                                          Return New Topic With {
+.TopicName = reader("topic_name"),
+.Id = reader("id"),
+.ForumId = reader("forum_id"),
+.UserId = reader("user_id")
+}
+                                                      End Function)
 
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = 27").FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
@@ -136,15 +138,14 @@ Namespace NUnitAutoTest
         Public Sub SelectOneTopicMapperUserIntParamAnon()
             Try
                 SQLContext.UserMappers.RegisterMapper(Function(reader)
-                                                    Return New Topic With {
+                                                          Return New Topic With {
                                                             .TopicName = reader("topic_name"),
                                                             .Id = reader("id"),
                                                             .ForumId = reader("forum_id"),
-                                                            .UserId = reader("user_id")
-                                                        }
-                                                End Function)
-
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+.UserId = reader("user_id")
+}
+                                                      End Function)
+                Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
                     Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
@@ -163,25 +164,22 @@ Namespace NUnitAutoTest
         Public Sub SelectOneTopicMapperUserIntParamDict()
             Try
                 SQLContext.UserMappers.RegisterMapper(Function(reader)
-                                                    Return New Topic With {
+                                                          Return New Topic With {
                                                             .TopicName = reader("topic_name"),
                                                             .Id = reader("id"),
                                                             .ForumId = reader("forum_id"),
                                                             .UserId = reader("user_id")
                                                         }
-                                                End Function)
+                                                      End Function)
 
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim params As New Dictionary(Of String, Object) From {{"ID", "27"}}
                     Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", params).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
-
                 SQLContext.UserMappers.UnregisterMapper(Of Topic)()
-
             Catch ex As Exception
                 Assert.Fail(ex.Message)
-
             End Try
         End Sub
 
@@ -190,7 +188,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperFastNoParams()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = 27").FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
@@ -204,7 +202,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperFastIntParamAnon()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
                     Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
@@ -220,7 +218,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperFastIntParamDict()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim params As New Dictionary(Of String, Object) From {{"ID", "27"}}
                     Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = @ID", params).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
@@ -237,7 +235,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperDynamicNoParams()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRowsDynamic("select * from topic where id = 27").FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.topic_name)
                 End Using
@@ -251,7 +249,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperDynamicIntParamAnon()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRowsDynamic("select * from topic where id = @ID", New With {.ID = 27}).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.topic_name)
                 End Using
@@ -265,7 +263,7 @@ Namespace NUnitAutoTest
         <Test>
         Public Sub SelectOneTopicMapperDynamicIntParamDict()
             Try
-                Using context As New SQLContext(New SQLiteConnection(ConnectionString))
+                Using context As New SQLContext(InitConnection())
                     Dim params As New Dictionary(Of String, Object) From {{"ID", "27"}}
                     Dim row = context.SelectRowsDynamic("select * from topic where id = @ID", params).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.topic_name)

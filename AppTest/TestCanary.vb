@@ -1,23 +1,85 @@
-﻿
-Imports System
-Imports System.Collections.Generic
-Imports System.Data
+﻿Option Strict On
+
 Imports System.Data.Common
-Imports System.Linq
-Imports System.Text
-Imports System.Runtime.CompilerServices
 Imports System.Data.SQLite
-Imports System.Dynamic
 Imports Dapper
-Imports System.Reflection
 Imports VSProject.SQLContext
 
 Public Class TestCanary
 
-
     Public Shared Sub Main()
+        MainAsync().GetAwaiter().GetResult()
+    End Sub
 
+    Public Shared Async Function MainAsync() As Task
         Dim probeSum As Double = 0.0
+
+        For I = 1 To 20
+            Dim sw As New Stopwatch()
+            sw.Start()
+
+            Using dbconnection As DbConnection = New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db")
+                Await dbconnection.OpenAsync()
+
+                Using dbcmd As DbCommand = dbconnection.CreateCommand()
+                    dbcmd.CommandText = "select id, topic_name from topic where forum_id = @fid"
+
+                    Dim par = dbcmd.CreateParameter()
+                    par.ParameterName = "@fid"
+                    par.DbType = DbType.Int64
+                    par.Value = 1
+
+                    dbcmd.Parameters.Add(par)
+
+                    Using dbreader = Await dbcmd.ExecuteReaderAsync()
+                        ' Массив с названиями столбцов
+                        Dim fieldNames() As String = {}
+                        Dim fieldCached As Boolean = False
+
+                        Dim fieldBound = dbreader.FieldCount - 1
+                        ReDim fieldNames(fieldBound)
+
+                        Do While Await dbreader.ReadAsync()
+                            ' Кешируем имена столбцов
+                            If Not fieldCached Then
+                                fieldCached = True
+
+                                For K = 0 To fieldBound
+                                    fieldNames(K) = dbreader.GetName(K)
+                                    If fieldNames(K) Is Nothing Then Stop
+                                Next
+                            End If
+
+                            ' Читаем значения в массив
+                            Dim fieldValues(fieldBound) As Object
+                            dbreader.GetValues(fieldValues)
+
+                            ' Упаковываем массив значений в словарь
+                            Dim retDict As New Dictionary(Of String, Object)
+                            For K = 0 To fieldBound
+                                If TypeOf fieldValues(K) Is DBNull Then
+                                    retDict.Add(fieldNames(K), Nothing)
+                                Else
+                                    retDict.Add(fieldNames(K), fieldValues(K))
+                                End If
+                            Next
+
+                        Loop
+                    End Using
+                End Using
+            End Using
+
+            sw.Stop()
+
+            probeSum += sw.ElapsedMilliseconds
+            Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds}")
+
+        Next
+
+        Console.WriteLine($"probe time avg {probeSum / 20}")
+        Console.WriteLine("SQLContext ManualWrite")
+        Console.ReadLine()
+        Return
 
         For I = 1 To 20
             Dim sw As New Stopwatch()
@@ -95,8 +157,8 @@ Public Class TestCanary
                 Dim context As New SqlContext.SqlContext(conn, "select id, topic_name from topic where forum_id = @fid")
                 SqlContext.SqlContext.AddMapper(Function(reader)
                                                     Return New TopicInfo With {
-                                                            .ID = reader("id"),
-                                                            .Name = reader("topic_name")
+                                                            .ID = CLng(reader("id")),
+                                                            .Name = CStr(reader("topic_name"))
                                                         }
                                                 End Function)
 
@@ -170,7 +232,7 @@ Public Class TestCanary
         Console.WriteLine("Готово")
         Console.ReadKey()
 
-    End Sub
+    End Function
 
 End Class
 
