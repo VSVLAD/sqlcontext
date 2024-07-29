@@ -68,11 +68,13 @@ Public Class ContextParameters
     End Function
 
     Private Shared Function GetDbType(type As Type) As DbType
-        If Not typeNetDbTypes.ContainsKey(type) Then
-            Throw New SQLContextException(Resources.ExceptionMessages.NO_CONVERT_NETTYPE_TO_DBTYPE)
+        Dim result As DbType
+
+        If typeNetDbTypes.TryGetValue(type, result) Then
+            Return result
         End If
 
-        Return typeNetDbTypes(type)
+        Throw New SQLContextException(Resources.ExceptionMessages.NO_CONVERT_NETTYPE_TO_DBTYPE)
     End Function
 
 End Class

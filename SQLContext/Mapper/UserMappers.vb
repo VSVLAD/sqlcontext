@@ -9,7 +9,7 @@ Public Class UserMappers
     Private Shared self As UserMappers
 
     ' Зарегистрированные пользовательские маперы
-    Private Shared userMapperCache As New ConcurrentDictionary(Of Type, [Delegate])
+    Private userMapperCache As New ConcurrentDictionary(Of Type, [Delegate])
 
     ' Приватный конструктор
     Private Sub New()

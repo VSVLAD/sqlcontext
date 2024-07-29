@@ -3,10 +3,12 @@
   <PropertyGroup>
     <RootNamespace>VSProject.SQLContext</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>SQLContext</Title>
-    <Version>5.0.0</Version>
+    <Version>5.0</Version>
+    <AssemblyVersion>5.0</AssemblyVersion>
+    <FileVersion>5.0</FileVersion>
     <Company>VS PROJECT</Company>
     <Authors>Vladilen Kruglov</Authors>
     <Copyright>Vladilen Kruglov</Copyright>
@@ -16,6 +18,11 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/VSVLAD/sqlcontext</RepositoryUrl>
     <PackageTags>orm;sql;mapper;entity mapping</PackageTags>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>none</AnalysisLevel>
+    <RunAnalyzersDuringLiveAnalysis>True</RunAnalyzersDuringLiveAnalysis>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

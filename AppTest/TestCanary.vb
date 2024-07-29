@@ -3,6 +3,7 @@
 Imports System.Data.Common
 Imports System.Data.SQLite
 Imports Dapper
+Imports VSProject.IteratorAsyncHelper
 Imports VSProject.SQLContext
 
 Public Class TestCanary
@@ -14,72 +15,88 @@ Public Class TestCanary
     Public Shared Async Function MainAsync() As Task
         Dim probeSum As Double = 0.0
 
-        For I = 1 To 20
-            Dim sw As New Stopwatch()
-            sw.Start()
+        'For I = 1 To 20
+        '    Dim sw As New Stopwatch()
+        '    sw.Start()
 
-            Using dbconnection As DbConnection = New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db")
-                Await dbconnection.OpenAsync()
+        '    Using dbconnection As DbConnection = New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db")
+        '        Await dbconnection.OpenAsync()
 
-                Using dbcmd As DbCommand = dbconnection.CreateCommand()
-                    dbcmd.CommandText = "select id, topic_name from topic where forum_id = @fid"
+        '        Using dbcmd As DbCommand = dbconnection.CreateCommand()
+        '            dbcmd.CommandText = "select id, topic_name from topic where forum_id = @fid"
 
-                    Dim par = dbcmd.CreateParameter()
-                    par.ParameterName = "@fid"
-                    par.DbType = DbType.Int64
-                    par.Value = 1
+        '            Dim par = dbcmd.CreateParameter()
+        '            par.ParameterName = "@fid"
+        '            par.DbType = DbType.Int64
+        '            par.Value = 1
 
-                    dbcmd.Parameters.Add(par)
+        '            dbcmd.Parameters.Add(par)
 
-                    Using dbreader = Await dbcmd.ExecuteReaderAsync()
-                        ' Массив с названиями столбцов
-                        Dim fieldNames() As String = {}
-                        Dim fieldCached As Boolean = False
+        '            Using dbreader = Await dbcmd.ExecuteReaderAsync()
+        '                ' Массив с названиями столбцов
+        '                Dim fieldNames() As String = {}
+        '                Dim fieldCached As Boolean = False
 
-                        Dim fieldBound = dbreader.FieldCount - 1
-                        ReDim fieldNames(fieldBound)
+        '                Dim fieldBound = dbreader.FieldCount - 1
+        '                ReDim fieldNames(fieldBound)
 
-                        Do While Await dbreader.ReadAsync()
-                            ' Кешируем имена столбцов
-                            If Not fieldCached Then
-                                fieldCached = True
+        '                Dim iter = BuildIteratorAsync(
+        '                    Async Function() As Task(Of Dictionary(Of String, Object))
 
-                                For K = 0 To fieldBound
-                                    fieldNames(K) = dbreader.GetName(K)
-                                    If fieldNames(K) Is Nothing Then Stop
-                                Next
-                            End If
+        '                        Do While Await dbreader.ReadAsync()
 
-                            ' Читаем значения в массив
-                            Dim fieldValues(fieldBound) As Object
-                            dbreader.GetValues(fieldValues)
+        '                            ' Кешируем имена столбцов
+        '                            If Not fieldCached Then
+        '                                fieldCached = True
 
-                            ' Упаковываем массив значений в словарь
-                            Dim retDict As New Dictionary(Of String, Object)
-                            For K = 0 To fieldBound
-                                If TypeOf fieldValues(K) Is DBNull Then
-                                    retDict.Add(fieldNames(K), Nothing)
-                                Else
-                                    retDict.Add(fieldNames(K), fieldValues(K))
-                                End If
-                            Next
+        '                                For K = 0 To fieldBound
+        '                                    fieldNames(K) = dbreader.GetName(K)
+        '                                    If fieldNames(K) Is Nothing Then Stop
+        '                                Next
+        '                            End If
 
-                        Loop
-                    End Using
-                End Using
-            End Using
+        '                            Await Task.Delay(100)
 
-            sw.Stop()
+        '                            ' Читаем значения в массив
+        '                            Dim fieldValues(fieldBound) As Object
+        '                            dbreader.GetValues(fieldValues)
 
-            probeSum += sw.ElapsedMilliseconds
-            Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds}")
+        '                            ' Упаковываем массив значений в словарь
+        '                            Dim retDict As New Dictionary(Of String, Object)
+        '                            For K = 0 To fieldBound
+        '                                If fieldValues(K).Equals(DBNull.Value) Then
+        '                                    retDict.Add(fieldNames(K), Nothing)
+        '                                Else
+        '                                    retDict.Add(fieldNames(K), fieldValues(K))
+        '                                End If
+        '                            Next
 
-        Next
+        '                            Return retDict
+        '                        Loop
 
-        Console.WriteLine($"probe time avg {probeSum / 20}")
-        Console.WriteLine("SQLContext ManualWrite")
-        Console.ReadLine()
-        Return
+        '                        Return Nothing
+        '                    End Function)
+
+        '                Await iter.ForEachAsync(
+        '                    Sub(item)
+        '                        Console.WriteLine(item("topic_name"))
+        '                    End Sub)
+
+        '            End Using
+        '        End Using
+        '    End Using
+
+        '    sw.Stop()
+
+        '    probeSum += sw.ElapsedMilliseconds
+        '    Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds}")
+
+        'Next
+
+        'Console.WriteLine($"probe time avg {probeSum / 20}")
+        'Console.WriteLine("SQLContext ManualWrite")
+        'Console.ReadLine()
+        'Return
 
         For I = 1 To 20
             Dim sw As New Stopwatch()
@@ -89,44 +106,39 @@ Public Class TestCanary
 
                 sw.Start()
 
-                '' Возвращает динамический объект
-                'For Each row In conn.SelectRowsDynamic("select id, topic_name from topic where forum_id = @fid",
-                '                                       New Dictionary(Of String, Object) From {{"fid", 1}})
-                '    resultList.Add(New TopicInfo With {
-                '        .ID = row.ID,
-                '        .Name = row.topic_name
-                '    })
-                'Next
+                ' Возвращает словарь
+                resultList.Clear()
+                For Each row In conn.SelectRows("select id, topic_name from topic where forum_id = @fid",
+                                                       New Dictionary(Of String, Object) From {{"fid", 1}})
+                    resultList.Add(New TopicInfo With {
+                        .ID = CLng(row("id")),
+                        .Name = CStr(row("topic_name"))
+                    })
+                Next
 
-                '' Возвращает словарь
-                'For Each row In conn.SelectRows("select id, topic_name from topic where forum_id = @fid",
-                '                                       New Dictionary(Of String, Object) From {{"fid", 1}})
-                '    resultList.Add(New TopicInfo With {
-                '        .ID = row("id"),
-                '        .Name = row("topic_name")
-                '    })
-                'Next
+                ' Стандартный маппер
+                resultList.Clear()
+                For Each row In conn.SelectRows(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
+                                                       New Dictionary(Of String, Object) From {{"fid", 1}})
+                    resultList.Add(row)
+                Next
 
-                ' ' Стандартный маппер
-                'For Each row In conn.SelectRows(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
-                '                                       New Dictionary(Of String, Object) From {{"fid", 1}})
-                '    resultList.Add(row)
-                'Next
+                ' С пользовательским маппером
+                VSProject.SQLContext.SQLContext.UserMappers.RegisterMapper(Function(reader)
+                                                                               Return New TopicInfo With {
+                                                                                    .ID = reader.GetInt64(0),
+                                                                                    .Name = reader.GetString(1)
+                                                                                }
+                                                                           End Function)
 
-                ' ' С пользовательским маппером
-                'SQLContextConfiguration.UserMappers.Register(Function(reader)
-                '                                                 Return New TopicInfo With {
-                '                                                            .ID = reader.GetInt64(0),
-                '                                                            .Name = reader.GetString(1)
-                '                                                            }
-                '                                             End Function)
-
-                'For Each row In conn.SelectRows(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
-                '                                                    New Dictionary(Of String, Object) From {{"fid", 1}})
-                '    resultList.Add(row)
-                'Next
+                resultList.Clear()
+                For Each row In conn.SelectRowsMapper(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
+                                                                    New Dictionary(Of String, Object) From {{"fid", 1}})
+                    resultList.Add(row)
+                Next
 
                 ' Возвращает скомпилированный маппер из выражений
+                resultList.Clear()
                 For Each row In conn.SelectRowsFast(Of TopicInfo)("select id, topic_name, cast(case when random() > 0.5 then null else 1 end as integer) as r
                                                                    from topic where forum_id = @fid",
                                      New Dictionary(Of String, Object) From {{"fid", 1}})

@@ -84,7 +84,7 @@ Namespace NUnitAutoTest
         End Sub
 
         <Test>
-        Public Sub SelectValueTypeMapperUser()
+        Public Sub SelectValueTypeLongMapperUser()
             Try
                 SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                           Dim value = reader.GetInt64(0)
@@ -169,11 +169,53 @@ Namespace NUnitAutoTest
         End Sub
 
         <Test>
-        Public Sub SelectValueTypeMapperDynamic()
+        Public Sub SelectValueTypeLongMapperDynamic()
             Try
                 Using context As New SQLContext(InitConnection())
                     Dim row = context.SelectRowsDynamic("select count(*) as value from topic where forum_id = 22").FirstOrDefault()
                     ClassicAssert.AreEqual(17052, row.value)
+                End Using
+
+            Catch ex As Exception
+                Assert.Fail(ex.Message)
+
+            End Try
+        End Sub
+
+        <Test>
+        Public Sub SelectValueTypeLongScalarValueMapperDynamic()
+            Try
+                Using context As New SQLContext(InitConnection())
+                    Dim row = context.SelectRowsDynamic("select count(*) + 1 - 1 from topic where forum_id = 22").FirstOrDefault()
+                    ClassicAssert.AreEqual(17052, CType(row, DynamicRow).ScalarValue(Of Long))
+                End Using
+
+            Catch ex As Exception
+                Assert.Fail(ex.Message)
+
+            End Try
+        End Sub
+
+        <Test>
+        Public Sub SelectValueTypeLongGetNullMapperDynamic()
+            Try
+                Using context As New SQLContext(InitConnection())
+                    Dim row = context.SelectRowsDynamic("select null as value from topic where forum_id = 22").FirstOrDefault()
+                    ClassicAssert.AreEqual(Nothing, row?.value)
+                End Using
+
+            Catch ex As Exception
+                Assert.Fail(ex.Message)
+
+            End Try
+        End Sub
+
+        <Test>
+        Public Sub SelectValueTypeLongScalarValueGetNullMapperDynamic()
+            Try
+                Using context As New SQLContext(InitConnection())
+                    Dim row = context.SelectRowsDynamic("select null as value from topic where forum_id = 22").FirstOrDefault()
+                    ClassicAssert.AreEqual(Nothing, CType(row, DynamicRow).ScalarValue(Of Long?))
                 End Using
 
             Catch ex As Exception

@@ -231,11 +231,11 @@ Public Class ContextMappers
         Return Nullable.GetUnderlyingType(GetType(T)) IsNot Nothing
     End Function
 
-    Public Sub ClearFastMapperCache()
+    Public Shared Sub ClearFastMapperCache()
         compileMapperCache.Clear()
     End Sub
 
-    Public Sub ClearInternalMapperCache()
+    Public Shared Sub ClearInternalMapperCache()
         tableInfoCache.Clear()
     End Sub
 

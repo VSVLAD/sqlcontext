@@ -14,12 +14,11 @@ Public Class DynamicRow
     Public Overrides Function TryGetMember(binder As GetMemberBinder, ByRef result As Object) As Boolean
         Dim propName = binder.Name
 
-        If row.ContainsKey(propName) Then
-            result = row(propName)
+        If row.TryGetValue(propName, result) Then
             Return True
         End If
 
-        ' Если передали неизвестное имя, вернём ничего
+        ' Если передали неизвестное имя, вернём Null
         Return True
     End Function
 
@@ -31,6 +30,20 @@ Public Class DynamicRow
         row(propName) = value
 
         Return False
+    End Function
+
+    ''' <summary>
+    ''' Возвращает скалярное значение или ничего из динамического объекта
+    ''' </summary>
+    Public Function ScalarValue() As Object
+        Return row.Values.FirstOrDefault()
+    End Function
+
+    ''' <summary>
+    ''' Возвращает скалярное значение преобразуя к заданному типу или ничего из динамического объекта
+    ''' </summary>
+    Public Function ScalarValue(Of TValueType)() As TValueType
+        Return CType(row.Values.FirstOrDefault(), TValueType)
     End Function
 
 End Class

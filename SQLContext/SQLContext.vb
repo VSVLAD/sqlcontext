@@ -1,4 +1,5 @@
-﻿Imports VSProject.SQLContext.Exceptions
+﻿Imports System.Dynamic
+Imports VSProject.SQLContext.Exceptions
 
 
 ''' <summary>Класс предоставляет методы для CRUD операций с ORM составляющей</summary>
@@ -49,7 +50,7 @@ Public Class SQLContext
             Next
 
         Catch ex As SQLContextException
-            Throw ex
+            Throw
 
         Catch ex As Exception
             Throw New SQLContextException(ex.Message, ex)
@@ -75,7 +76,7 @@ Public Class SQLContext
             End If
 
         Catch ex As SQLContextException
-            Throw ex
+            Throw
 
         Catch ex As Exception
             Throw New SQLContextException(ex.Message, ex)
@@ -146,8 +147,8 @@ Public Class SQLContext
             Using dbreader As IDataReader = dbcmd.ExecuteReader()
 
                 ' Массив с названиями столбцов
-                Dim fieldNames() As String = {}
-                Dim fieldCached As Boolean = False
+                Dim fieldNames = Array.Empty(Of String)
+                Dim fieldCached = False
 
                 Dim fieldBound = dbreader.FieldCount - 1
                 ReDim fieldNames(fieldBound)
