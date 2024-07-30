@@ -1,10 +1,11 @@
 ﻿Option Explicit On
 Option Strict On
+
 Imports System.Linq.Expressions
 Imports System.Reflection
 Imports VSProject.SQLContext.Attributes
 
-Public Class ContextMappers
+Public Class SQLContextMappers
 
     ''' <summary>
     ''' Хранит кеш метаинформации по таблице и столбцам для маппинга
@@ -46,6 +47,10 @@ Public Class ContextMappers
                             ElseIf TypeOf xAttribute Is PrimaryKeyAttribute Then
                                 columnInfo.PrimaryKey = True
 
+                            ElseIf TypeOf xAttribute Is ConverterAttribute Then
+                                Dim attrColumn = DirectCast(xAttribute, ConverterAttribute)
+                                columnInfo.UserConverter = attrColumn.Name
+
                             End If
                         Next
 
@@ -64,12 +69,12 @@ Public Class ContextMappers
     ' Функция для создания делегата маппинга данных из IDataRecord в TClass
     Friend Shared Function FromReaderToExpressionTreeMapper(Of TClass)(reader As IDataRecord) As Func(Of IDataRecord, TClass)
         Dim funcMapper = compileMapperCache.Fetch(GetType(TClass),
-                                 Function(typeClass)
+                                 Function(typeUser)
                                      Dim tableInfo = FromTypeToTableInfo(Of TClass)()
                                      Dim parameter = Expression.Parameter(GetType(IDataRecord), "reader")
 
                                      ' Маппинг в зависимости от простого или составного типа
-                                     If IsPrimitiveType(typeClass) OrElse IsBaseObjectType(typeClass) Then
+                                     If IsValueType(typeUser) OrElse IsBaseObjectType(typeUser) Then
                                          Dim returnExp As Expression
 
                                          ' Для простых типов всегда читаем колонку с индексом 0
@@ -80,7 +85,7 @@ Public Class ContextMappers
                                                                             constOrdinalZero)
 
                                          ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
-                                         If IsNullableType(typeClass) Then
+                                         If IsNullableType(typeUser) Then
 
                                              ' Создаём переменную под чтение скаляра и читаем в пременную типа Object
                                              Dim varValue = Expression.Variable(GetType(Object), "value")
@@ -91,11 +96,11 @@ Public Class ContextMappers
                                              statementList.Add(varAssign)
 
                                              ' Проверяем переменную с значением, если содержит DBNull, тогда возвращает default значение, иначе саму переменную
-                                             Dim defaultValue = Expression.Default(typeClass)
+                                             Dim defaultValue = Expression.Default(typeUser)
                                              Dim callCheckDBNull = Expression.Call(varValue, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
 
                                              ' Кастуем переменную к типу возвращаемого значения
-                                             Dim convertValue = Expression.Convert(varValue, typeClass)
+                                             Dim convertValue = Expression.Convert(varValue, typeUser)
 
                                              Dim ifConvertedValue = Expression.Condition(
                                                     callCheckDBNull,
@@ -109,14 +114,14 @@ Public Class ContextMappers
                                              ' Создаём готовый блок из операторов
                                              returnExp = Expression.Block(New ParameterExpression() {varValue}, statementList)
                                          Else
-                                             returnExp = Expression.Convert(callGetValue, typeClass)
+                                             returnExp = Expression.Convert(callGetValue, typeUser)
                                          End If
 
                                          Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(returnExp, parameter)
                                          Return lambda.Compile()
 
                                      Else
-                                         Dim props = typeClass.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
+                                         Dim props = typeUser.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
                                          Dim bindings As New List(Of MemberBinding)
 
                                          ' Для составных типов используем мету для маппинга
@@ -156,7 +161,7 @@ Public Class ContextMappers
                                          Next
 
                                          ' Создаём экземпляр составного типа
-                                         Dim memberInit = Expression.MemberInit(Expression.[New](typeClass), bindings)
+                                         Dim memberInit = Expression.MemberInit(Expression.[New](typeUser), bindings)
                                          Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(memberInit, parameter)
 
                                          Return lambda.Compile()
@@ -167,18 +172,18 @@ Public Class ContextMappers
 
     ''' <summary>Преобразует строку данных в объект пользовательского типа</summary>
     Friend Shared Function FromDictionaryToType(Of T)(row As Dictionary(Of String, Object)) As T
-        Dim typeClass = GetType(T)
+        Dim typeUser = GetType(T)
 
-        If IsPrimitiveType(typeClass) OrElse IsBaseObjectType(typeClass) Then ' Если простой значимый тип или скаляр в Object
+        If IsValueType(typeUser) OrElse IsBaseObjectType(typeUser) Then ' Если простой тип или скаляр как Object
             Return CType(row.Values.FirstOrDefault(), T)
 
-        ElseIf typeClass.IsClass Then ' Если тип является классом
+        ElseIf typeUser.IsClass Then ' Если тип является классом
 
             ' Читаем мету из кеша или ищем её, если тип не знаком
             Dim tableInfo = FromTypeToTableInfo(Of T)()
 
             'Маппим столбцы на свойства
-            Dim props = typeClass.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
+            Dim props = typeUser.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
             Dim retObj As T = Activator.CreateInstance(Of T)
 
             For Each kvData In row
@@ -189,15 +194,21 @@ Public Class ContextMappers
                 Dim prop = props.FirstOrDefault(Function(p) p.Name.Equals(ci.PropertyName, StringComparison.InvariantCultureIgnoreCase))
                 If prop Is Nothing Then Continue For
 
-                ' Записываем в свойство значение
-                prop.SetValue(retObj, kvData.Value, Nothing)
+                ' Если есть пользовательский преобразователь, то выполняем его
+                If Not String.IsNullOrEmpty(ci.UserConverter) Then
+                    Dim converter = UserConverters.Instance.GetConverter(ci.UserConverter)
+                    prop.SetValue(retObj, converter(kvData.Value), Nothing)
+                Else
+                    ' Записываем в свойство значение
+                    prop.SetValue(retObj, kvData.Value, Nothing)
+                End If
             Next
 
             Return retObj
         End If
 
         ' В остальных случаях, когда маппинг на тип не поддерживается
-        Throw New NotImplementedException(String.Format(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_TYPE, typeClass.ToString()))
+        Throw New NotImplementedException(String.Format(Resources.ExceptionMessages.NOT_IMPLEMENTED_WITH_TYPE, typeUser.ToString()))
 
     End Function
 
@@ -208,12 +219,28 @@ Public Class ContextMappers
 
     ''' <summary>Проверяет, является ли переданный объект базовым Object</summary>
     Friend Shared Function IsBaseObjectType(variable As Type) As Boolean
-        Return TypeOf variable Is Object AndAlso variable.BaseType Is Nothing
+        Return TypeOf variable Is Object AndAlso
+                      variable.BaseType Is Nothing
     End Function
 
-    ''' <summary>Проверяет, является ли переданный тип простым значимым</summary>
-    Friend Shared Function IsPrimitiveType(variable As Type) As Boolean
-        Return variable.IsPrimitive OrElse variable.IsValueType OrElse variable Is GetType(String)
+    ''' <summary>Проверяет, является ли переданный тип простым значимым (не класс и не структура)
+    ''' 1. Хотя DateTime и Int64 являются структурами, считаем их простыми типами
+    ''' 2. Enum также считаем простым типом
+    ''' 3. String также считаем простым типом
+    ''' </summary>
+    Friend Shared Function IsValueType(variable As Type) As Boolean
+        Return variable.IsPrimitive OrElse
+               variable.IsEnum OrElse
+               variable Is GetType(String) OrElse
+               (variable.IsValueType AndAlso variable.Namespace IsNot Nothing AndAlso variable.Namespace.StartsWith("System"))
+    End Function
+
+    Friend Shared Function IsStructure(variable As Type) As Boolean
+        Return Not variable.IsEnum AndAlso
+                   variable.IsValueType AndAlso
+               Not variable.IsPrimitive AndAlso
+                   variable.Namespace IsNot Nothing AndAlso
+               Not variable.Namespace.StartsWith("System")
     End Function
 
     ''' <summary>Метод возвращает значимый тип по свойству, извлекая информацию из Nullable типа</summary>

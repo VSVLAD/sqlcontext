@@ -14,6 +14,7 @@
     <Copyright>Vladilen Kruglov</Copyright>
     <Description>SQLContext it is microORM for easy mapping your sql queries to VB and C# classes. The library has some special features that provide the flexibility to configure the mapping</Description>
     <PackageIcon>db.png</PackageIcon>
+    <PackageId>VSProject.SQLContext</PackageId>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/VSVLAD/sqlcontext</RepositoryUrl>
@@ -23,6 +24,12 @@
     <AnalysisLevel>none</AnalysisLevel>
     <RunAnalyzersDuringLiveAnalysis>True</RunAnalyzersDuringLiveAnalysis>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageReleaseNotes>* Обновленный интерфейс мапперов, переосмыслена реализация
+* Исправление ошибок и увеличение производительности в разы
+* Удалены классы которые устарели и должны реализовываться пользователем
+* Новый интерфейс для параметризации запросов (словарный тип или анонимный объект)
+
+Большое количество примеров доступно в проекте NUnitAutoTest</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -36,6 +43,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>SQLContext.xml</DocumentationFile>
     <DefineTrace>False</DefineTrace>
+    <DefineDebug>False</DefineDebug>
   </PropertyGroup>
 
   <ItemGroup>

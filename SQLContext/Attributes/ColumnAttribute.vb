@@ -10,7 +10,7 @@
         Protected Sub New()
         End Sub
 
-        Public Sub New(ByVal Name As String)
+        Public Sub New(Name As String)
             Me.Name = Name
         End Sub
 

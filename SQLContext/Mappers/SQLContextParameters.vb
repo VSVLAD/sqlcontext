@@ -1,9 +1,7 @@
 ﻿Option Explicit On
 Option Strict On
 
-Imports VSProject.SQLContext.Exceptions
-
-Public Class ContextParameters
+Public Class SQLContextParameters
 
     ''' <summary>
     ''' Стандартные типы .NET замапленные на типы SQL

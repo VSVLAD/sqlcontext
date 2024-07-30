@@ -82,7 +82,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", SQLContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -148,7 +148,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", SQLContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -205,7 +205,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = @ID", ContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = @ID", SQLContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 

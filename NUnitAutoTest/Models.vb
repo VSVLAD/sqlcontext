@@ -30,11 +30,12 @@ Public Class ForumTopic
     <Column("forum_name")>
     Public Property ForumName As String
 
+    <Converter("sqlite_text_date")>
     <Column("message_last_date")>
-    Public Property MessageLastDate As Date
-
+    Public Property MessageLastDate As Date?
 
 End Class
+
 
 <Serializable>
 Public Class ForumTopicCount

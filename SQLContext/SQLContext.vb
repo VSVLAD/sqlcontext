@@ -1,6 +1,4 @@
 ﻿Imports System.Dynamic
-Imports VSProject.SQLContext.Exceptions
-
 
 ''' <summary>Класс предоставляет методы для CRUD операций с ORM составляющей</summary>
 Public Class SQLContext
@@ -17,9 +15,13 @@ Public Class SQLContext
     Public Shared ReadOnly Property UserMappers As UserMappers = UserMappers.Instance
 
     ''' <summary>
+    ''' Ссылка на хранилище пользовательских конвертерор типов столбцов
+    ''' </summary>
+    Public Shared ReadOnly Property UserConverters As UserConverters = UserConverters.Instance
+
+    ''' <summary>
     ''' Конструктор принимает объект соединения
     ''' </summary>
-    ''' <param name="Connection">Инициализированный объект соединения</param>
     Public Sub New(Connection As IDbConnection)
         dbconnection = Connection
 
@@ -46,7 +48,7 @@ Public Class SQLContext
     Public Iterator Function SelectRows(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
         Try
             For Each row In SelectRows(SqlText, Parameters)
-                Yield ContextMappers.FromDictionaryToType(Of TClass)(row)
+                Yield SQLContextMappers.FromDictionaryToType(Of TClass)(row)
             Next
 
         Catch ex As SQLContextException
@@ -91,7 +93,7 @@ Public Class SQLContext
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
-            Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
+            Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
                 Using dbreader = dbcmd.ExecuteReader()
                     Do While dbreader.Read()
                         Yield Mapper(dbreader)
@@ -118,11 +120,11 @@ Public Class SQLContext
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
-            Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
+            Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
                 Using dbreader = dbcmd.ExecuteReader()
 
                     ' Получаем ссылку на скомпилированный маппер
-                    Dim mapper = ContextMappers.FromReaderToExpressionTreeMapper(Of TClass)(dbreader)
+                    Dim mapper = SQLContextMappers.FromReaderToExpressionTreeMapper(Of TClass)(dbreader)
 
                     ' Цикл по всем записям и маппим на TClass
                     Do While dbreader.Read()
@@ -143,15 +145,13 @@ Public Class SQLContext
     Public Iterator Function SelectRows(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of Dictionary(Of String, Object))
         Dim dbconnection As IDbConnection = OpenConnection()
 
-        Using dbcmd As IDbCommand = ContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
+        Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
             Using dbreader As IDataReader = dbcmd.ExecuteReader()
 
                 ' Массив с названиями столбцов
-                Dim fieldNames = Array.Empty(Of String)
-                Dim fieldCached = False
-
                 Dim fieldBound = dbreader.FieldCount - 1
-                ReDim fieldNames(fieldBound)
+                Dim fieldNames(fieldBound) As String
+                Dim fieldCached = False
 
                 Do While dbreader.Read()
 
@@ -187,7 +187,7 @@ Public Class SQLContext
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк в виде Dictionary(Of String, Object)</summary>
     Public Iterator Function SelectRows(Of TAnonymousObject)(SqlText As String, Parameters As TAnonymousObject) As IEnumerable(Of Dictionary(Of String, Object))
-        For Each row In SelectRows(SqlText, ContextParameters.FromObject(Parameters))
+        For Each row In SelectRows(SqlText, SQLContextParameters.FromObject(Parameters))
             Yield row
         Next
     End Function
@@ -197,7 +197,7 @@ Public Class SQLContext
     Public Iterator Function SelectRowsDynamic(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of Object)
         Try
             For Each row In SelectRows(SqlText, Parameters)
-                Yield ContextMappers.FromDictionaryToDynamic(row)
+                Yield SQLContextMappers.FromDictionaryToDynamic(row)
             Next
 
         Catch ex As Exception
@@ -209,7 +209,7 @@ Public Class SQLContext
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на класс DynamicRow, производный от DynamicObject</summary>
     ''' <param name="SqlText">Текст запроса SQL</param>
     Public Iterator Function SelectRowsDynamic(Of TAnonymousObject)(SqlText As String, Parameters As TAnonymousObject) As IEnumerable(Of Object)
-        For Each row In SelectRowsDynamic(SqlText, ContextParameters.FromObject(Parameters))
+        For Each row In SelectRowsDynamic(SqlText, SQLContextParameters.FromObject(Parameters))
             Yield row
         Next
     End Function

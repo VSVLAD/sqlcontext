@@ -5,12 +5,16 @@ Friend Class ColumnInformation
 
     Public AutoIncrement As Boolean
 
-    Public Programmable As Boolean
+    Public UserConverter As String
 
     Public ColumnName As String
 
     Public PropertyName As String
 
     Public PropertyType As Type
+
+    Public Overrides Function ToString() As String
+        Return $"ColumnName: {ColumnName}, PropertyName: {PropertyName}, PropertyType: {PropertyType.Name}"
+    End Function
 
 End Class

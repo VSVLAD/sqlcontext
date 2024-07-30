@@ -10,4 +10,8 @@ Friend Class TableInformation
     ''' <summary>Список столбцов</summary>
     Public Columns As New List(Of ColumnInformation)
 
+    Public Overrides Function ToString() As String
+        Return $"TableName: {TableName}"
+    End Function
+
 End Class
