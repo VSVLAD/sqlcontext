@@ -72,20 +72,19 @@ Public Class SQLContextMappers
                                  Function(typeUser)
                                      Dim tableInfo = FromTypeToTableInfo(Of TClass)()
                                      Dim parameter = Expression.Parameter(GetType(IDataRecord), "reader")
+                                     Dim bodyBlock As Expression
 
                                      Dim statementList As New List(Of Expression)          ' Создаём список для последовательности операторов (добавляем присвоение в переменные)
                                      Dim variableList As New List(Of ParameterExpression)  ' Создаём список переменных для блока
+                                     Dim bindingsList As New List(Of MemberBinding)        ' Для инициализации свойств пользовательского типа
 
                                      ' Маппинг в зависимости от простого или составного типа
                                      If IsValueType(typeUser) OrElse IsBaseObjectType(typeUser) Then
-                                         Dim returnExp As Expression
 
                                          ' Для простых типов всегда читаем колонку с индексом 0
-                                         Dim methodGetValue = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
-                                         Dim constOrdinalZero = Expression.Constant(0, GetType(Integer))
                                          Dim callGetValue = Expression.Call(parameter,
-                                                                            methodGetValue,
-                                                                            constOrdinalZero)
+                                                                            GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)}),
+                                                                            Expression.Constant(0, GetType(Integer)))
 
                                          ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
                                          If IsNullableType(typeUser) Then
@@ -97,77 +96,67 @@ Public Class SQLContextMappers
                                              Dim varAssign = Expression.Assign(varValue, callGetValue)
                                              statementList.Add(varAssign)
 
-                                             ' Проверяем переменную с значением, если содержит DBNull, тогда возвращает default значение, иначе саму переменную
-                                             Dim defaultValue = Expression.Default(typeUser)
-                                             Dim callCheckDBNull = Expression.Call(varValue, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
-
-                                             ' Кастуем переменную к типу возвращаемого значения
-                                             Dim convertValue = Expression.Convert(varValue, typeUser)
-
-                                             Dim ifConvertedValue = Expression.Condition(
-                                                    callCheckDBNull,
-                                                    defaultValue,
-                                                    convertValue
-                                                )
+                                             ' Проверяем переменную с значением, если содержит DBNull, тогда возвращает default значение, иначе саму сконвертированную переменную в целевой тип
+                                             Dim varCheckConvert = Expression.Condition(
+                                                                        Expression.Call(varValue,
+                                                                                        GetType(Object).GetMethod("Equals", {GetType(Object)}),
+                                                                                        Expression.Constant(DBNull.Value)),
+                                                                            Expression.Default(typeUser),
+                                                                            Expression.Convert(varValue, typeUser)
+                                                                    )
 
                                              ' Добавляем условие в последовательность и этот же оператор будет return
-                                             statementList.Add(ifConvertedValue)
+                                             statementList.Add(varCheckConvert)
 
-                                             ' Создаём готовый блок из операторов
-                                             returnExp = Expression.Block(New ParameterExpression() {varValue}, statementList)
+                                             ' Создаём блок из одного оператора с присваиванием
+                                             bodyBlock = Expression.Block(variableList, statementList)
                                          Else
-                                             returnExp = Expression.Convert(callGetValue, typeUser)
+                                             bodyBlock = Expression.Convert(callGetValue, typeUser)
                                          End If
-
-                                         Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(returnExp, parameter)
-                                         Return lambda.Compile()
 
                                      Else
                                          ' Читаем все свойства класса
                                          Dim props = typeUser.GetProperties(BindingFlags.Instance Or BindingFlags.Public)
-
-                                         Dim bindingsList As New List(Of MemberBinding)        ' Для инициализации свойств пользовательского типа
-
 
                                          ' Для составных типов используем мету для маппинга
                                          For Each ci In tableInfo.Columns
                                              Dim prop = props.FirstOrDefault(Function(p) p.Name.Equals(ci.PropertyName, StringComparison.InvariantCultureIgnoreCase))
 
                                              If prop IsNot Nothing Then
-                                                 Dim methodGetValue = GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)})
 
                                                  ' Если в DataReader не столбца с таким названием, то это пользовательское свойство, пропускаем
                                                  Dim columnOrdinal = reader.GetOrdinal(ci.ColumnName)
                                                  If columnOrdinal = -1 Then Continue For
-
-                                                 Dim constOrdinalIndex = Expression.Constant(columnOrdinal, GetType(Integer))
-                                                 Dim callGetValue = Expression.Call(parameter, methodGetValue, constOrdinalIndex)
 
                                                  ' Создаём переменную 
                                                  Dim varValue = Expression.Variable(GetType(Object), $"value_{ci.PropertyName}")
                                                  variableList.Add(varValue)
 
                                                  ' И операцию присваивания
-                                                 Dim varAssign = Expression.Assign(varValue, callGetValue)
+                                                 Dim varAssign = Expression.Assign(varValue,
+                                                                                   Expression.Call(parameter,
+                                                                                                   GetType(IDataRecord).GetMethod("GetValue", {GetType(Integer)}),
+                                                                                                   Expression.Constant(columnOrdinal, GetType(Integer))))
                                                  statementList.Add(varAssign)
 
                                                  ' Если тип поддерживает Nothing, формируем ещё проверку на DBNull
                                                  If IsNullableType(ci.PropertyType) Then
-                                                     Dim defaultValue = Expression.Default(ci.PropertyType)
-                                                     Dim callCheckDBNull = Expression.Call(varValue, GetType(Object).GetMethod("Equals", {GetType(Object)}), Expression.Constant(DBNull.Value))
-                                                     Dim convertValue = Expression.Convert(varValue, ci.PropertyType)
+                                                     Dim memberAssignment = Expression.Bind(
+                                                                    prop,
+                                                                    Expression.Condition(
+                                                                        Expression.Call(varValue,
+                                                                                        GetType(Object).GetMethod("Equals", {GetType(Object)}),
+                                                                                        Expression.Constant(DBNull.Value)),
+                                                                            Expression.Default(ci.PropertyType),
+                                                                            Expression.Convert(varValue, ci.PropertyType)
+                                                                    ))
 
-                                                     Dim ifConvertedValue = Expression.Condition(
-                                                        callCheckDBNull,
-                                                        defaultValue,
-                                                        convertValue
-                                                    )
-
-                                                     Dim memberAssignment = Expression.Bind(prop, ifConvertedValue)
                                                      bindingsList.Add(memberAssignment)
                                                  Else
-                                                     Dim convertValue = Expression.Convert(varValue, ci.PropertyType)
-                                                     Dim memberAssignment = Expression.Bind(prop, convertValue)
+                                                     Dim memberAssignment = Expression.Bind(
+                                                                                prop,
+                                                                                Expression.Convert(varValue, ci.PropertyType)
+                                                                            )
 
                                                      bindingsList.Add(memberAssignment)
                                                  End If
@@ -175,15 +164,17 @@ Public Class SQLContextMappers
                                          Next
 
                                          ' Операция для создания экземпляр пользовательского класса
-                                         Dim returnTypeInit = Expression.MemberInit(Expression.[New](typeUser), bindingsList)
-                                         statementList.Add(returnTypeInit)
+                                         Dim returnInit = Expression.MemberInit(Expression.[New](typeUser), bindingsList)
+                                         statementList.Add(returnInit)
 
                                          ' Создаём блок кода с присваиванием переменным и возвратом пользовательского типа
-                                         Dim varAssignBlock = Expression.Block(variableList, statementList)
-
-                                         Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(varAssignBlock, parameter)
-                                         Return lambda.Compile()
+                                         bodyBlock = Expression.Block(variableList, statementList)
                                      End If
+
+                                     ' Создаём лямбду и компилируем
+                                     Dim lambda = Expression.Lambda(Of Func(Of IDataRecord, TClass))(bodyBlock, parameter)
+                                     Return lambda.Compile()
+
                                  End Function)
         Return CType(funcMapper, Func(Of IDataRecord, TClass))
     End Function
@@ -241,7 +232,8 @@ Public Class SQLContextMappers
                       variable.BaseType Is Nothing
     End Function
 
-    ''' <summary>Проверяет, является ли переданный тип простым значимым (не класс и не структура)
+    ''' <summary>
+    ''' Проверяет, является ли переданный тип простым значимым (не класс и не структура)
     ''' 1. Хотя DateTime и Int64 являются структурами, считаем их простыми типами
     ''' 2. Enum также считаем простым типом
     ''' 3. String также считаем простым типом
@@ -253,6 +245,9 @@ Public Class SQLContextMappers
                (variable.IsValueType AndAlso variable.Namespace IsNot Nothing AndAlso variable.Namespace.StartsWith("System"))
     End Function
 
+    ''' <summary>
+    ''' Проверка, что тип является сложной пользовательской структурой
+    ''' </summary>
     Friend Shared Function IsStructure(variable As Type) As Boolean
         Return Not variable.IsEnum AndAlso
                    variable.IsValueType AndAlso

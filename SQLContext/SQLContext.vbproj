@@ -6,9 +6,9 @@
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>SQLContext</Title>
-    <Version>5.0</Version>
-    <AssemblyVersion>5.0</AssemblyVersion>
-    <FileVersion>5.0</FileVersion>
+    <Version>5.1</Version>
+    <AssemblyVersion>5.1</AssemblyVersion>
+    <FileVersion>5.1</FileVersion>
     <Company>VS PROJECT</Company>
     <Authors>Vladilen Kruglov</Authors>
     <Copyright>Vladilen Kruglov</Copyright>

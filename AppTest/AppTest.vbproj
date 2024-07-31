@@ -119,10 +119,6 @@
       <Project>{d16a84f2-97e3-4825-b4e9-5bb328676c67}</Project>
       <Name>SQLContext</Name>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\Vladilen\source\repos\AsyncIterator\IteratorAsync.csproj">
-      <Project>{24be1f06-e548-4b6d-8b78-0f1336ea6abf}</Project>
-      <Name>IteratorAsync</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
