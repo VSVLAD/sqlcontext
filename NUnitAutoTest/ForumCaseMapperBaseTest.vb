@@ -114,11 +114,11 @@ Namespace NUnitAutoTest
             Try
                 SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                           Return New Topic With {
-.TopicName = reader("topic_name"),
-.Id = reader("id"),
-.ForumId = reader("forum_id"),
-.UserId = reader("user_id")
-}
+                                                                .TopicName = reader("topic_name"),
+                                                                .Id = reader("id"),
+                                                                .ForumId = reader("forum_id"),
+                                                                .UserId = reader("user_id")
+                                                            }
                                                       End Function)
 
                 Using context As New SQLContext(InitConnection())
@@ -142,8 +142,8 @@ Namespace NUnitAutoTest
                                                             .TopicName = reader("topic_name"),
                                                             .Id = reader("id"),
                                                             .ForumId = reader("forum_id"),
-.UserId = reader("user_id")
-}
+                                                            .UserId = reader("user_id")
+                                                            }
                                                       End Function)
                 Using context As New SQLContext(InitConnection())
 
