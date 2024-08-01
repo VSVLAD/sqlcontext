@@ -3,7 +3,6 @@
 Imports System.Data.Common
 Imports System.Data.SQLite
 Imports Dapper
-Imports VSProject.IteratorAsyncHelper
 Imports VSProject.SQLContext
 
 Public Class TestCanary
@@ -16,6 +15,11 @@ Public Class TestCanary
         Dim probeSum As Double = 0.0
 
 
+        Dim anon = New With {.Prop1 = 1, .Prop2 = 2}
+        Dim boxed As Object = anon
+
+        Dim res = SQLContextParameters.ToDictionary(boxed)
+
         For I = 1 To 20
             Dim sw As New Stopwatch()
             sw.Start()
@@ -24,8 +28,7 @@ Public Class TestCanary
 
             Using dbconnection = New SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
 
-                retList.AddRange(dbconnection.SelectRowsFast(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
-                                                                                        SQLContextParameters.FromObject(New With {.fid = 1})))
+                retList.AddRange(dbconnection.SelectRowsFast(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid", New With {.fid = 1}))
 
             End Using
 

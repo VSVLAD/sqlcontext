@@ -50,11 +50,11 @@ Public Class SQLContextParameters
     ''' <summary>
     ''' Сформировать словарь с параметрами по свойствам из анонимного объекта
     ''' </summary>
-    Public Shared Function FromObject(Of TAnonymousObject)(Paramerers As TAnonymousObject) As Dictionary(Of String, Object)
+    Public Shared Function ToDictionary(Paramerers As Object) As Dictionary(Of String, Object)
         Dim retDict As New Dictionary(Of String, Object)
 
         If Paramerers IsNot Nothing Then
-            Dim type = GetType(TAnonymousObject)
+            Dim type = Paramerers.GetType()
             Dim props = type.GetProperties()
 
             For Each prop In props

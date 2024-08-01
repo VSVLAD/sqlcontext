@@ -41,11 +41,13 @@ Public Class SQLContext
         Return dbconnection
     End Function
 
+#Region "       Маппинг используя Reflection "
+
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
     ''' <typeparam name="TClass">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
     ''' <param name="SqlText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
+    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of TClass)
         Try
             For Each row In SelectRows(SqlText, Parameters)
                 Yield SQLContextMappers.FromDictionaryToType(Of TClass)(row)
@@ -60,11 +62,27 @@ Public Class SQLContext
         End Try
     End Function
 
+    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Parameters As Object) As IEnumerable(Of TClass)
+        For Each row In SelectRows(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Parameters))
+            Yield row
+        Next
+    End Function
+
+    Public Iterator Function SelectRows(Of TClass)(SqlText As String) As IEnumerable(Of TClass)
+        For Each row In SelectRows(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Nothing))
+            Yield row
+        Next
+    End Function
+
+#End Region
+
+#Region "       Маппинг с использованием пользовательского маппера"
+
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на простой тип или класс T</summary>
     ''' <typeparam name="TClass">На данный тип может быть спроецирован результат. Типом может быть класс или примитивный тип</typeparam>
     ''' <param name="SqlText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of TClass)
         Try
             ' Проверяем, если для указаного типа пользовательский маппер
             Dim mapper = UserMappers.Instance.GetMapper(Of TClass)()
@@ -111,12 +129,22 @@ Public Class SQLContext
     ''' Выборка строк с использованием конкретного пользовательского маппера
     ''' </summary>
     Public Iterator Function SelectRows(Of TClass)(SqlText As String, Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
-        For Each row In SelectRowsMapper(SqlText, Nothing, Mapper)
+        For Each row In SelectRowsMapper(SqlText, SQLContextParameters.ToDictionary(Nothing), Mapper)
             Yield row
         Next
     End Function
 
-    Public Iterator Function SelectRowsFast(Of TClass)(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of TClass)
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String) As IEnumerable(Of TClass)
+        For Each row In SelectRowsMapper(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Nothing))
+            Yield row
+        Next
+    End Function
+
+#End Region
+
+#Region "       Маппинг Expression Tree "
+
+    Public Iterator Function SelectRowsFast(Of TClass)(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of TClass)
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
@@ -139,10 +167,26 @@ Public Class SQLContext
         End Try
     End Function
 
+    Public Iterator Function SelectRowsFast(Of TClass)(SqlText As String, Parameters As Object) As IEnumerable(Of TClass)
+        For Each row In SelectRowsFast(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Parameters))
+            Yield row
+        Next
+    End Function
+
+    Public Iterator Function SelectRowsFast(Of TClass)(SqlText As String) As IEnumerable(Of TClass)
+        For Each row In SelectRowsFast(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Nothing))
+            Yield row
+        Next
+    End Function
+
+#End Region
+
+#Region "       Маппинг на Dictionary(Of String, Object)"
+
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк в виде Dictionary(Of String, Object)</summary>
     ''' <param name="SQLText">Текст запроса SQL</param>
     ''' <param name="Parameters">Словарь аргументов для параметризованного запроса</param>
-    Public Iterator Function SelectRows(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of Dictionary(Of String, Object))
+    Public Iterator Function SelectRows(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of Dictionary(Of String, Object))
         Dim dbconnection As IDbConnection = OpenConnection()
 
         Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
@@ -186,15 +230,26 @@ Public Class SQLContext
     End Function
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк в виде Dictionary(Of String, Object)</summary>
-    Public Iterator Function SelectRows(Of TAnonymousObject)(SqlText As String, Parameters As TAnonymousObject) As IEnumerable(Of Dictionary(Of String, Object))
-        For Each row In SelectRows(SqlText, SQLContextParameters.FromObject(Parameters))
+    Public Iterator Function SelectRows(SqlText As String, Parameters As Object) As IEnumerable(Of Dictionary(Of String, Object))
+        For Each row In SelectRows(SqlText, SQLContextParameters.ToDictionary(Parameters))
             Yield row
         Next
     End Function
 
+    ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк в виде Dictionary(Of String, Object)</summary>
+    Public Iterator Function SelectRows(SqlText As String) As IEnumerable(Of Dictionary(Of String, Object))
+        For Each row In SelectRows(SqlText, SQLContextParameters.ToDictionary(Nothing))
+            Yield row
+        Next
+    End Function
+
+#End Region
+
+#Region "       Маппинг на Dynamic "
+
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на класс DynamicRow, производный от DynamicObject</summary>
     ''' <param name="SqlText">Текст запроса SQL</param>
-    Public Iterator Function SelectRowsDynamic(SqlText As String, Optional Parameters As Dictionary(Of String, Object) = Nothing) As IEnumerable(Of Object)
+    Public Iterator Function SelectRowsDynamic(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of Object)
         Try
             For Each row In SelectRows(SqlText, Parameters)
                 Yield SQLContextMappers.FromDictionaryToDynamic(row)
@@ -208,11 +263,21 @@ Public Class SQLContext
 
     ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на класс DynamicRow, производный от DynamicObject</summary>
     ''' <param name="SqlText">Текст запроса SQL</param>
-    Public Iterator Function SelectRowsDynamic(Of TAnonymousObject)(SqlText As String, Parameters As TAnonymousObject) As IEnumerable(Of Object)
-        For Each row In SelectRowsDynamic(SqlText, SQLContextParameters.FromObject(Parameters))
+    Public Iterator Function SelectRowsDynamic(SqlText As String, Parameters As Object) As IEnumerable(Of Object)
+        For Each row In SelectRowsDynamic(SqlText, SQLContextParameters.ToDictionary(Parameters))
             Yield row
         Next
     End Function
+
+    ''' <summary>Выборка данных по SQL запросу, возвращает коллекцию строк спроецированных на класс DynamicRow, производный от DynamicObject</summary>
+    ''' <param name="SqlText">Текст запроса SQL</param>
+    Public Iterator Function SelectRowsDynamic(SqlText As String) As IEnumerable(Of Object)
+        For Each row In SelectRowsDynamic(SqlText, SQLContextParameters.ToDictionary(Nothing))
+            Yield row
+        Next
+    End Function
+
+#End Region
 
 #Region "       Поддержка IDisposable       "
 

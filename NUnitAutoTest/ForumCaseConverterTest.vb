@@ -44,7 +44,7 @@ Namespace NUnitAutoTest
                                 where t.forum_id = @ForumId
                              order by message_last_date desc
                                 limit @Limit
-                               offset @Offset ", SQLContextParameters.FromObject(New With {.ForumId = 1, .Limit = 100, .Offset = 1000}))
+                               offset @Offset ", SQLContextParameters.ToDictionary(New With {.ForumId = 1, .Limit = 100, .Offset = 1000}))
 
                         ' Дата старше текущего дня
                         ClassicAssert.Greater(Date.Now, row.MessageLastDate)
@@ -80,7 +80,7 @@ Namespace NUnitAutoTest
                                 where t.forum_id = @ForumId
                              order by message_last_date desc
                                 limit @Limit
-                               offset @Offset ", SQLContextParameters.FromObject(New With {.ForumId = 1, .Limit = 100, .Offset = 1000}),
+                               offset @Offset ", SQLContextParameters.ToDictionary(New With {.ForumId = 1, .Limit = 100, .Offset = 1000}),
                                                  Function(reader)
                                                      Return New ForumTopic With {
                                                         .ForumId = reader("forum_id"),

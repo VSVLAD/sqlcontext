@@ -9,7 +9,7 @@ Namespace NUnitAutoTest
     <TestFixture>
     Public Class ForumCaseAnotherFieldNoMapTest
 
-        Public Function InitConnection() As IDbConnection
+        Public Shared Function InitConnection() As IDbConnection
             Dim connection = SQLiteFactory.Instance.CreateConnection()
             connection.ConnectionString = "Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"
             Return connection

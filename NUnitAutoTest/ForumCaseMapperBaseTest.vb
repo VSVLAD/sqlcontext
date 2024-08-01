@@ -9,7 +9,7 @@ Namespace NUnitAutoTest
     <TestFixture>
     Public Class ForumCaseMapperBaseTest
 
-        Public Function InitConnection() As IDbConnection
+        Public Shared Function InitConnection() As IDbConnection
             Dim connection = SQLiteFactory.Instance.CreateConnection()
             connection.ConnectionString = "Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"
             Return connection
@@ -82,7 +82,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", SQLContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRows(Of Topic)("select * from topic where id = @ID", SQLContextParameters.ToDictionary(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -148,7 +148,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", SQLContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRowsMapper(Of Topic)("select * from topic where id = @ID", SQLContextParameters.ToDictionary(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
@@ -205,7 +205,7 @@ Namespace NUnitAutoTest
                 Using context As New SQLContext(InitConnection())
 
                     ' Анонимный тип не может быть проброшен в Generic. Поэтому перегрузки (Of T, TAnonymousObject) не реализовано
-                    Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = @ID", SQLContextParameters.FromObject(New With {.ID = 27})).FirstOrDefault()
+                    Dim row = context.SelectRowsFast(Of Topic)("select * from topic where id = @ID", SQLContextParameters.ToDictionary(New With {.ID = 27})).FirstOrDefault()
                     ClassicAssert.AreEqual("ACCESS2000", row.TopicName)
                 End Using
 
