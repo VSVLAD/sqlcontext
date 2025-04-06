@@ -28,7 +28,9 @@ Public Class TestCanary
 
             Using dbconnection = New SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
 
-                retList.AddRange(dbconnection.SelectRowsFast(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid", New With {.fid = 1}))
+                For Each row In dbconnection.SelectRowsFast(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid", New With {.fid = 1})
+                    retList.Add(row)
+                Next
 
             End Using
 

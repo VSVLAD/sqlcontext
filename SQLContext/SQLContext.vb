@@ -125,10 +125,22 @@ Public Class SQLContext
         End Try
     End Function
 
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Parameters As Object, Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
+        For Each row In SelectRowsMapper(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Parameters), Mapper)
+            Yield row
+        Next
+    End Function
+
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Parameters As Object) As IEnumerable(Of TClass)
+        For Each row In SelectRowsMapper(Of TClass)(SqlText, SQLContextParameters.ToDictionary(Parameters))
+            Yield row
+        Next
+    End Function
+
     ''' <summary>
     ''' Выборка строк с использованием конкретного пользовательского маппера
     ''' </summary>
-    Public Iterator Function SelectRows(Of TClass)(SqlText As String, Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
+    Public Iterator Function SelectRowsMapper(Of TClass)(SqlText As String, Mapper As Func(Of IDataRecord, TClass)) As IEnumerable(Of TClass)
         For Each row In SelectRowsMapper(SqlText, SQLContextParameters.ToDictionary(Nothing), Mapper)
             Yield row
         Next
