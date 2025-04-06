@@ -48,11 +48,11 @@ Namespace NUnitAutoTest
             Try
                 SQLContext.UserMappers.RegisterMapper(Function(reader)
                                                           Return New Topic With {
-.TopicName = If(reader("topic_name").Equals(DBNull.Value), Nothing, reader("topic_name")),
-.Id = If(reader("id").Equals(DBNull.Value), Nothing, reader("id")),
-.ForumId = If(reader("forum_id").Equals(DBNull.Value), Nothing, reader("forum_id")),
-.UserId = If(reader("user_id").Equals(DBNull.Value), Nothing, reader("user_id"))
-}
+                                                                .TopicName = If(reader("topic_name").Equals(DBNull.Value), Nothing, reader("topic_name")),
+                                                                .Id = If(reader("id").Equals(DBNull.Value), Nothing, reader("id")),
+                                                                .ForumId = If(reader("forum_id").Equals(DBNull.Value), Nothing, reader("forum_id")),
+                                                                .UserId = If(reader("user_id").Equals(DBNull.Value), Nothing, reader("user_id"))
+                                                            }
                                                       End Function)
 
                 Using context As New SQLContext(InitConnection())
