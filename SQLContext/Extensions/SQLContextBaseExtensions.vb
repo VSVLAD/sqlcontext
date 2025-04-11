@@ -74,6 +74,7 @@ Namespace Extensions
         End Function
 #End Region
 
+
 #Region "       Перегрузки в которых текушщий объект это SQLContext и параметры словарь "
         <Extension>
         Public Function ExecReader(Connection As SQLContext, SqlText As String, Parameters As Dictionary(Of String, Object)) As IDataReader
@@ -115,6 +116,51 @@ Namespace Extensions
         <Extension>
         Public Function ExecScalar(Of TResult)(Connection As SQLContext, SqlText As String, Parameters As Object) As TResult
             Return ExecScalar(Of TResult)(Connection.OpenConnection(), SqlText, SQLContextParameters.ToDictionary(Parameters))
+        End Function
+#End Region
+
+
+#Region "       Перегрузки в которых текушщий объект это IDbConnection и без параметров"
+        <Extension>
+        Public Function ExecReader(Connection As IDbConnection, SqlText As String) As IDataReader
+            Return ExecReader(Connection, SqlText, Nothing)
+        End Function
+
+        <Extension>
+        Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String) As Integer
+            Return ExecNonQuery(Connection, SqlText, Nothing)
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Connection As IDbConnection, SqlText As String) As Object
+            Return ExecScalar(Connection, SqlText, Nothing)
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String) As TResult
+            Return ExecScalar(Of TResult)(Connection, SqlText, Nothing)
+        End Function
+#End Region
+
+#Region "       Перегрузки в которых текушщий объект это SQLContext и без параметров"
+        <Extension>
+        Public Function ExecReader(Connection As SQLContext, SqlText As String) As IDataReader
+            Return ExecReader(Connection.OpenConnection(), SqlText, Nothing)
+        End Function
+
+        <Extension>
+        Public Function ExecNonQuery(Connection As SQLContext, SqlText As String) As Integer
+            Return ExecNonQuery(Connection.OpenConnection(), SqlText, Nothing)
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Connection As SQLContext, SqlText As String) As Object
+            Return ExecScalar(Connection.OpenConnection(), SqlText, Nothing)
+        End Function
+
+        <Extension>
+        Public Function ExecScalar(Of TResult)(Connection As SQLContext, SqlText As String) As TResult
+            Return ExecScalar(Of TResult)(Connection.OpenConnection(), SqlText, Nothing)
         End Function
 #End Region
 

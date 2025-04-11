@@ -1,5 +1,6 @@
 ﻿Option Strict On
 
+Imports System.Data
 Imports System.Data.Common
 Imports System.Data.SQLite
 Imports Dapper
@@ -22,9 +23,9 @@ Public Class TestCanary
 
         For I = 1 To 20
             Dim sw As New Stopwatch()
-            sw.Start()
-
             Dim retList As New List(Of TopicInfo)
+
+            sw.Start()
 
             Using dbconnection = New SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
 
@@ -43,52 +44,52 @@ Public Class TestCanary
         Console.WriteLine($"probe time avg {probeSum / 20}")
         Console.WriteLine("SQLContext FAST")
         Console.ReadLine()
-        Return
 
 
-        'For I = 1 To 20
-        '    Dim sw As New Stopwatch()
-        '    sw.Start()
+        probeSum = 0.0
 
-        '    Dim retList As New List(Of TopicInfo)
+        For I = 1 To 20
+            Dim sw As New Stopwatch()
+            Dim retList As New List(Of TopicInfo)
 
-        '    Using dbconnection As DbConnection = New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db")
-        '        dbconnection.Open()
+            sw.Start()
 
-        '        Using dbcmd As DbCommand = dbconnection.CreateCommand()
-        '            dbcmd.CommandText = "select id, topic_name from topic where forum_id = @fid"
+            Using dbconnection As DbConnection = New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db")
+                dbconnection.Open()
 
-        '            Dim par = dbcmd.CreateParameter()
-        '            par.ParameterName = "@fid"
-        '            par.DbType = DbType.Int64
-        '            par.Value = 1
+                Using dbcmd As DbCommand = dbconnection.CreateCommand()
+                    dbcmd.CommandText = "select id, topic_name from topic where forum_id = @fid"
 
-        '            dbcmd.Parameters.Add(par)
+                    Dim par = dbcmd.CreateParameter()
+                    par.ParameterName = "@fid"
+                    par.DbType = DbType.Int64
+                    par.Value = 1
 
-        '            Using dbreader = dbcmd.ExecuteReader()
-        '                Do While dbreader.Read()
+                    dbcmd.Parameters.Add(par)
 
-        '                    retList.Add(New TopicInfo() With {
-        '                            .ID = CLng(dbreader("id")),
-        '                            .Name = dbreader.GetString(1)
-        '                        })
+                    Using dbreader = dbcmd.ExecuteReader()
+                        Do While dbreader.Read()
 
-        '                Loop
+                            retList.Add(New TopicInfo() With {
+                                    .ID = CLng(dbreader("id")),
+                                    .Name = dbreader.GetString(1)
+                                })
 
-        '            End Using
-        '        End Using
-        '    End Using
+                        Loop
 
-        '    sw.Stop()
+                    End Using
+                End Using
+            End Using
 
-        '    probeSum += sw.ElapsedMilliseconds
-        '    Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds}, count(*) = {retList.Count}")
-        'Next
+            sw.Stop()
 
-        'Console.WriteLine($"probe time avg {probeSum / 20}")
-        'Console.WriteLine("Manual write")
-        'Console.ReadLine()
-        'Return
+            probeSum += sw.ElapsedMilliseconds
+            Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds}, count(*) = {retList.Count}")
+        Next
+
+        Console.WriteLine($"probe time avg {probeSum / 20}")
+        Console.WriteLine("Manual write")
+        Console.ReadLine()
 
 
         'For I = 1 To 20
@@ -162,7 +163,7 @@ Public Class TestCanary
         '        End Using
         '    End Using
 
-        'sw.Stop()
+        '    sw.Stop()
 
         '    probeSum += sw.ElapsedMilliseconds
         '    Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds}")
@@ -172,72 +173,69 @@ Public Class TestCanary
         'Console.WriteLine($"probe time avg {probeSum / 20}")
         'Console.WriteLine("SQLContext ManualWrite")
         'Console.ReadLine()
+
+
+        'For I = 1 To 20
+        '    Dim sw As New Stopwatch()
+
+        '    Using conn As New VSProject.SQLContext.SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
+        '        Dim resultList As New List(Of TopicInfo)
+
+        '        sw.Start()
+
+        '        ' Возвращает словарь
+        '        resultList.Clear()
+        '        For Each row In conn.SelectRows("select id, topic_name from topic where forum_id = @fid",
+        '                                               New Dictionary(Of String, Object) From {{"fid", 1}})
+        '            resultList.Add(New TopicInfo With {
+        '                .ID = CLng(row("id")),
+        '                .Name = CStr(row("topic_name"))
+        '            })
+        '        Next
+
+        '        ' Стандартный маппер
+        '        resultList.Clear()
+        '        For Each row In conn.SelectRows(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
+        '                                               New Dictionary(Of String, Object) From {{"fid", 1}})
+        '            resultList.Add(row)
+        '        Next
+
+        '        ' С пользовательским маппером
+        '        VSProject.SQLContext.SQLContext.UserMappers.RegisterMapper(Function(reader)
+        '                                                                       Return New TopicInfo With {
+        '                                                                            .ID = reader.GetInt64(0),
+        '                                                                            .Name = reader.GetString(1)
+        '                                                                        }
+        '                                                                   End Function)
+
+        '        resultList.Clear()
+        '        For Each row In conn.SelectRowsMapper(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
+        '                                                            New Dictionary(Of String, Object) From {{"fid", 1}})
+        '            resultList.Add(row)
+        '        Next
+
+        '        ' Возвращает скомпилированный маппер из выражений
+        '        resultList.Clear()
+        '        For Each row In conn.SelectRowsFast(Of TopicInfo)("select id, topic_name, cast(case when random() > 0.5 then null else 1 end as integer) as r
+        '                                                           from topic where forum_id = @fid",
+        '                             New Dictionary(Of String, Object) From {{"fid", 1}})
+        '            resultList.Add(row)
+        '        Next
+
+        '        sw.Stop()
+
+        '        probeSum += sw.ElapsedMilliseconds
+        '        Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds} with {resultList.Count}")
+
+        '    End Using
+        'Next
+
+        'Console.WriteLine($"probe time avg {probeSum / 20}")
+        'Console.WriteLine("SQLContext VS PROJECT")
+        'Console.ReadLine()
         'Return
 
-        For I = 1 To 20
-            Dim sw As New Stopwatch()
-
-            Using conn As New VSProject.SQLContext.SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
-                Dim resultList As New List(Of TopicInfo)
-
-                sw.Start()
-
-                ' Возвращает словарь
-                resultList.Clear()
-                For Each row In conn.SelectRows("select id, topic_name from topic where forum_id = @fid",
-                                                       New Dictionary(Of String, Object) From {{"fid", 1}})
-                    resultList.Add(New TopicInfo With {
-                        .ID = CLng(row("id")),
-                        .Name = CStr(row("topic_name"))
-                    })
-                Next
-
-                ' Стандартный маппер
-                resultList.Clear()
-                For Each row In conn.SelectRows(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
-                                                       New Dictionary(Of String, Object) From {{"fid", 1}})
-                    resultList.Add(row)
-                Next
-
-                ' С пользовательским маппером
-                VSProject.SQLContext.SQLContext.UserMappers.RegisterMapper(Function(reader)
-                                                                               Return New TopicInfo With {
-                                                                                    .ID = reader.GetInt64(0),
-                                                                                    .Name = reader.GetString(1)
-                                                                                }
-                                                                           End Function)
-
-                resultList.Clear()
-                For Each row In conn.SelectRowsMapper(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid",
-                                                                    New Dictionary(Of String, Object) From {{"fid", 1}})
-                    resultList.Add(row)
-                Next
-
-                ' Возвращает скомпилированный маппер из выражений
-                resultList.Clear()
-                For Each row In conn.SelectRowsFast(Of TopicInfo)("select id, topic_name, cast(case when random() > 0.5 then null else 1 end as integer) as r
-                                                                   from topic where forum_id = @fid",
-                                     New Dictionary(Of String, Object) From {{"fid", 1}})
-                    resultList.Add(row)
-                Next
-
-                sw.Stop()
-
-                probeSum += sw.ElapsedMilliseconds
-                Console.WriteLine($"probe #{I}, time {sw.ElapsedMilliseconds} with {resultList.Count}")
-
-            End Using
-        Next
-
-        Console.WriteLine($"probe time avg {probeSum / 20}")
-        Console.WriteLine("SQLContext VS PROJECT")
-        Console.ReadLine()
-        Return
-
-
-
-        Console.WriteLine("DAPPER")
-        probeSum = 0
+        probeSum = 0.0
 
         For I = 1 To 20
             Dim sw As New Stopwatch()
@@ -247,8 +245,7 @@ Public Class TestCanary
 
                 sw.Start()
 
-
-                For Each row In conn.Query(Of TopicInfo)("select id as ID, topic_name as Name from topic where forum_id = @fid", New With {.fid = 1})
+                For Each row In Await conn.QueryAsync(Of TopicInfo)("select id as ID, topic_name as Name from topic where forum_id = @fid", New With {.fid = 1})
                     resultList.Add(New TopicInfo With {
                         .ID = row.ID,
                         .Name = row.Name
@@ -264,8 +261,9 @@ Public Class TestCanary
         Next
 
         Console.WriteLine($"probe time avg {probeSum / 20}")
+        Console.WriteLine("Dapper")
 
-        Console.WriteLine("Готово")
+        Console.WriteLine("Finish")
         Console.ReadKey()
 
     End Function
