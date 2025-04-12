@@ -24,7 +24,7 @@ Public Class SQLContextParameters
     ''' <summary>
     ''' Сформировать подготовленную команду по словарю, где ключ - имя параметра, а значение - .NET тип упакованный в Object
     ''' </summary>
-    Public Shared Function FromDictionary(Connection As IDbConnection, SqlText As String, Paramerers As Dictionary(Of String, Object)) As IDbCommand
+    Public Shared Function CreatePreparedCommand(Connection As IDbConnection, SqlText As String, Paramerers As Dictionary(Of String, Object)) As IDbCommand
 
         ' Создаём объект для подготовленной команды
         Dim prepCommand = Connection.CreateCommand()
@@ -56,9 +56,14 @@ Public Class SQLContextParameters
         If Paramerers IsNot Nothing Then
             Dim type = Paramerers.GetType()
             Dim props = type.GetProperties()
+            Dim fields = type.GetFields()
 
             For Each prop In props
                 retDict.Add(prop.Name, prop.GetValue(Paramerers))
+            Next
+
+            For Each field In fields
+                retDict.Add(field.Name, field.GetValue(Paramerers))
             Next
         End If
 

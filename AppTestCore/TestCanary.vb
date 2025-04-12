@@ -5,6 +5,7 @@ Imports System.Data.Common
 Imports System.Data.SQLite
 Imports Dapper
 Imports VSProject.SQLContext
+Imports VSProject.SQLContext.Extensions
 
 Public Class TestCanary
 
@@ -12,9 +13,22 @@ Public Class TestCanary
         MainAsync().GetAwaiter().GetResult()
     End Sub
 
-    Public Shared Async Function MainAsync() As Task
-        Dim probeSum As Double = 0.0
+    Public Class ForumObject
+        Public Property fid As Integer
+        Public Property name As String
+    End Class
 
+    Public Shared Async Function MainAsync() As Task
+
+        'Dim fo2 As New ForumObject()
+        'fo2.fid = 900
+        'fo2.name = "YES"
+
+        'Using dbconnection = New SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
+        '    dbconnection.ExecNonQuery("insert into forum(id, forum_name) values(@fid, @name)", fo2)
+        'End Using
+
+        Dim probeSum = 0.0
 
         Dim anon = New With {.Prop1 = 1, .Prop2 = 2}
         Dim boxed As Object = anon
@@ -27,9 +41,12 @@ Public Class TestCanary
 
             sw.Start()
 
+            Dim fo As New ForumObject()
+            fo.FID = 1
+
             Using dbconnection = New SQLContext(New SQLiteConnection("Data Source=C:\inetpub\wwwroot\murcode\app_data\SqlRu.db"))
 
-                For Each row In dbconnection.SelectRowsFast(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid", New With {.fid = 1})
+                For Each row In dbconnection.SelectRowsFast(Of TopicInfo)("select id, topic_name from topic where forum_id = @fid", fo)
                     retList.Add(row)
                 Next
 

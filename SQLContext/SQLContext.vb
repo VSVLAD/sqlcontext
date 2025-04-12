@@ -111,7 +111,7 @@ Public Class SQLContext
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
-            Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
+            Using dbcmd As IDbCommand = SQLContextParameters.CreatePreparedCommand(dbconnection, SqlText, Parameters)
                 Using dbreader = dbcmd.ExecuteReader()
                     Do While dbreader.Read()
                         Yield Mapper(dbreader)
@@ -160,7 +160,7 @@ Public Class SQLContext
         Try
             Dim dbconnection As IDbConnection = OpenConnection()
 
-            Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
+            Using dbcmd As IDbCommand = SQLContextParameters.CreatePreparedCommand(dbconnection, SqlText, Parameters)
                 Using dbreader = dbcmd.ExecuteReader()
 
                     ' Получаем ссылку на скомпилированный маппер
@@ -201,7 +201,7 @@ Public Class SQLContext
     Public Iterator Function SelectRows(SqlText As String, Parameters As Dictionary(Of String, Object)) As IEnumerable(Of Dictionary(Of String, Object))
         Dim dbconnection As IDbConnection = OpenConnection()
 
-        Using dbcmd As IDbCommand = SQLContextParameters.FromDictionary(dbconnection, SqlText, Parameters)
+        Using dbcmd As IDbCommand = SQLContextParameters.CreatePreparedCommand(dbconnection, SqlText, Parameters)
             Using dbreader As IDataReader = dbcmd.ExecuteReader()
 
                 ' Массив с названиями столбцов

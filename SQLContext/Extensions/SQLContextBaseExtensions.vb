@@ -11,7 +11,7 @@ Namespace Extensions
         Public Function ExecReader(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As IDataReader
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.FromDictionary(Connection, SqlText, Parameters)
+            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
             Dim sqlReader = sqlCmd.ExecuteReader()
 
             sqlCmd.Dispose()
@@ -22,7 +22,7 @@ Namespace Extensions
         Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As Integer
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.FromDictionary(Connection, SqlText, Parameters)
+            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
             Dim sqlResult = sqlCmd.ExecuteNonQuery()
 
             sqlCmd.Dispose()
@@ -33,7 +33,7 @@ Namespace Extensions
         Public Function ExecScalar(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As Object
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.FromDictionary(Connection, SqlText, Parameters)
+            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
             sqlCmd.Dispose()
@@ -44,7 +44,7 @@ Namespace Extensions
         Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As TResult
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.FromDictionary(Connection, SqlText, Parameters)
+            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
             Dim sqlResult = sqlCmd.ExecuteScalar()
 
             sqlCmd.Dispose()
