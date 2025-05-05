@@ -26,6 +26,10 @@ Public Class SQLContextParameters
     ''' </summary>
     Public Shared Function CreatePreparedCommand(Connection As IDbConnection, SqlText As String, Paramerers As Dictionary(Of String, Object)) As IDbCommand
 
+        ' Определяем провайдера с нюансами
+        Dim dbProviderTypeName = Connection.GetType().Name
+        Dim prepPrefixName = If(dbProviderTypeName = "OracleConnection", ":", "@")
+
         ' Создаём объект для подготовленной команды
         Dim prepCommand = Connection.CreateCommand()
         prepCommand.CommandText = SqlText
@@ -35,7 +39,8 @@ Public Class SQLContextParameters
 
                 ' Создаём параметр с типом как значение свойства
                 Dim param = prepCommand.CreateParameter()
-                param.ParameterName = $"@{kv.Key}"
+
+                param.ParameterName = $"{prepPrefixName}{kv.Key}"
                 param.DbType = GetDbType(If(kv.Value, "").GetType())
                 param.Value = If(kv.Value, DBNull.Value)
 
