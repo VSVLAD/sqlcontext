@@ -6,9 +6,9 @@
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>SQLContext</Title>
-    <Version>5.2</Version>
-    <AssemblyVersion>5.2</AssemblyVersion>
-    <FileVersion>5.2</FileVersion>
+    <Version>5.2.1</Version>
+    <AssemblyVersion>5.2.1</AssemblyVersion>
+    <FileVersion>5.2.1</FileVersion>
     <Company>VS PROJECT</Company>
     <Authors>Vladilen Kruglov</Authors>
     <Copyright>Vladilen Kruglov</Copyright>
@@ -30,6 +30,7 @@
 * Новый интерфейс для параметризации запросов (словарный тип или анонимный объект)
 
 Большое количество примеров доступно в проекте NUnitAutoTest</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
