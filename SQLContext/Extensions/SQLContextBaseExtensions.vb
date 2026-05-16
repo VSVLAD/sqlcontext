@@ -11,44 +11,36 @@ Namespace Extensions
         Public Function ExecReader(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As IDataReader
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
-            Dim sqlReader = sqlCmd.ExecuteReader()
-
-            sqlCmd.Dispose()
-            Return sqlReader
+            Using sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
+                Return sqlCmd.ExecuteReader()
+            End Using
         End Function
 
         <Extension>
         Public Function ExecNonQuery(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As Integer
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
-            Dim sqlResult = sqlCmd.ExecuteNonQuery()
-
-            sqlCmd.Dispose()
-            Return sqlResult
+            Using sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
+                Return sqlCmd.ExecuteNonQuery()
+            End Using
         End Function
 
         <Extension>
         Public Function ExecScalar(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As Object
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
-            Dim sqlResult = sqlCmd.ExecuteScalar()
-
-            sqlCmd.Dispose()
-            Return sqlResult
+            Using sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
+                Return sqlCmd.ExecuteScalar()
+            End Using
         End Function
 
         <Extension>
         Public Function ExecScalar(Of TResult)(Connection As IDbConnection, SqlText As String, Parameters As Dictionary(Of String, Object)) As TResult
             If Connection.State = ConnectionState.Closed Then Connection.Open()
 
-            Dim sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
-            Dim sqlResult = sqlCmd.ExecuteScalar()
-
-            sqlCmd.Dispose()
-            Return CType(sqlResult, TResult)
+            Using sqlCmd = SQLContextParameters.CreatePreparedCommand(Connection, SqlText, Parameters)
+                Return CType(sqlCmd.ExecuteScalar(), TResult)
+            End Using
         End Function
 #End Region
 

@@ -29,7 +29,7 @@ Public Class DynamicRow
         ' Добавим в словарь, даже если передали неизвестное свойство, всё равно добавим
         row(propName) = value
 
-        Return False
+        Return True
     End Function
 
     ''' <summary>

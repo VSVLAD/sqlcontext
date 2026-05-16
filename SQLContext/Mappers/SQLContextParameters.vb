@@ -37,6 +37,9 @@ Public Class SQLContextParameters
         If Paramerers IsNot Nothing Then
             For Each kv In Paramerers
 
+                ' Проверяем существование параметра
+                If prepCommand.Parameters.Contains(kv.Key) Then Continue For
+
                 ' Создаём параметр с типом как значение свойства
                 Dim param = prepCommand.CreateParameter()
 
